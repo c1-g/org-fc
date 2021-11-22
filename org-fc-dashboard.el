@@ -77,7 +77,7 @@ environment without svg support."
   "Compute statistics for an INDEX of cards and positions."
   (let* ((total 0) (suspended 0)
          (by-type (make-hash-table))
-         (avg-ease 0.0) (avg-box 0.0) (avg-interval 0.0)
+         (avg-ease 0.0) (avg-box 0.0) (avg-interval 0.0) (burden 0.0)
          (n-pos 0)
          ;; NOTE: This has to use `list' so incf + getf works as
          ;; expected
@@ -118,7 +118,8 @@ environment without svg support."
 
             (cl-incf avg-ease (plist-get pos :ease))
             (cl-incf avg-box (plist-get pos :box))
-            (cl-incf avg-interval (plist-get pos :interval)))))
+            (cl-incf avg-interval (plist-get pos :interval))
+            (cl-incf burden (expt (plist-get pos :interval) -1)))))
       (cl-incf (gethash (plist-get card :type) by-type 0) 1))
     (list :total total
           :suspended suspended
@@ -127,7 +128,8 @@ environment without svg support."
           :created created
           :avg-ease (/ avg-ease n-pos)
           :avg-box (/ avg-box n-pos)
-          :avg-interval (/ avg-interval n-pos))))
+          :avg-interval (/ avg-interval n-pos)
+          :burden burden)))
 
 ;;; Bar Chart Generation
 
@@ -229,6 +231,9 @@ environment without svg support."
       (when reviews-stats
         (insert
          (propertize "Review Statistics (All Cards)\n\n" 'face 'org-level-1))
+
+        (insert
+         (format "Burden: %6.2f\n" (plist-get stats :burden)))
 
         (dolist (scope '((:day . "Day")
                          (:week . "Week")
