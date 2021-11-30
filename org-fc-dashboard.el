@@ -119,7 +119,11 @@ environment without svg support."
             (cl-incf avg-ease (plist-get pos :ease))
             (cl-incf avg-box (plist-get pos :box))
             (cl-incf avg-interval (plist-get pos :interval))
-            (cl-incf burden (expt (plist-get pos :interval) -1)))))
+            (cl-incf burden (if (= (plist-get pos :interval) 0)
+                                0      
+                              ;; Card with the interval of 0
+                              ;; won't contribute to burden
+                              (expt (plist-get pos :interval) -1))))))
       (cl-incf (gethash (plist-get card :type) by-type 0) 1))
     (list :total total
           :suspended suspended
