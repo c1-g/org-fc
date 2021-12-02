@@ -255,6 +255,17 @@ If point is not inside a flashcard entry, an error is raised."
   "Check if the current heading belongs to a flashcard."
   (member org-fc-flashcard-tag (org-get-tags nil)))
 
+(defun org-fc-up-heading-or-point-min ()
+  "Fixed version of Org's `org-up-heading-or-point-min'."
+  (ignore-errors (org-back-to-heading t))
+  (let ((p (point)))
+    (if (< 1 (funcall outline-level))
+        (progn
+          (org-up-heading-safe)
+          (when (= (point) p)
+            (goto-char (point-min))))
+      (unless (bobp) (goto-char (point-min))))))
+
 (defun org-fc-goto-entry-heading ()
   "Move up to the parent heading marked as a flashcard."
   (unless (org-fc-part-of-entry-p)
@@ -279,6 +290,96 @@ If point is not inside a flashcard entry, an error is raised."
   (org-set-tags
    (remove tag (org-get-tags nil 'local))))
 
+;;; Dealing with keywords
+;; Thank you, org-roam.
+
+(defun org-fc-get-keyword (name &optional file bound)
+  "Return keyword property NAME from an org FILE.
+FILE defaults to current file.
+Only scans up to BOUND bytes of the document."
+  (unless bound
+    (setq bound 1024))
+  (if file
+      (with-temp-buffer
+        (insert-file-contents file nil 0 bound)
+        (org-fc--get-keyword name))
+    (org-fc--get-keyword name bound)))
+
+(defun org-fc--get-keyword (name &optional bound)
+  "Return keyword property NAME in current buffer.
+If BOUND, scan up to BOUND bytes of the buffer."
+  (save-excursion
+    (let ((re (format "^#\\+%s:[ \t]*\\([^\n]+\\)" (upcase name))))
+      (goto-char (point-min))
+      (when (re-search-forward re bound t)
+        (buffer-substring-no-properties (match-beginning 1) (match-end 1))))))
+
+(defun org-fc-end-of-meta-data (&optional full)
+  "Like `org-end-of-meta-data', but supports file-level metadata.
+
+When FULL is non-nil but not t, skip planning information,
+properties, clocking lines and logbook drawers.
+
+When optional argument FULL is t, skip everything above, and also
+skip keywords."
+  (org-back-to-heading-or-point-min t)
+  (when (org-at-heading-p) (forward-line))
+  ;; Skip planning information.
+  (when (looking-at-p org-planning-line-re) (forward-line))
+  ;; Skip property drawer.
+  (when (looking-at org-property-drawer-re)
+    (goto-char (match-end 0))
+    (forward-line))
+  ;; When FULL is not nil, skip more.
+  (when (and full (not (org-at-heading-p)))
+    (catch 'exit
+      (let ((end (save-excursion (outline-next-heading) (point)))
+            (re (concat "[ \t]*$" "\\|" org-clock-line-re)))
+        (while (not (eobp))
+          (cond ;; Skip clock lines.
+           ((looking-at-p re) (forward-line))
+           ;; Skip logbook drawer.
+           ((looking-at-p org-logbook-drawer-re)
+            (if (re-search-forward "^[ \t]*:END:[ \t]*$" end t)
+                (forward-line)
+              (throw 'exit t)))
+           ((looking-at-p org-drawer-regexp)
+            (if (re-search-forward "^[ \t]*:END:[ \t]*$" end t)
+                (forward-line)
+              (throw 'exit t)))
+           ;; When FULL is t, skip keywords too.
+           ((and (eq full t)
+                 (looking-at-p org-keyword-regexp))
+            (forward-line))
+           (t (throw 'exit t))))))))
+
+(defun org-fc-set-keyword (key value)
+  "Set keyword KEY to VALUE.
+If the property is already set, it's value is replaced."
+  (org-with-point-at 1
+    (let ((case-fold-search t))
+      (if (re-search-forward (concat "^#\\+" key ":\\(.*\\)") (point-max) t)
+          (if (string-blank-p value)
+              (kill-whole-line)
+            (replace-match (concat " " value) 'fixedcase nil nil 1))
+        (org-fc-end-of-meta-data 'drawers)
+        (if (save-excursion (end-of-line) (eobp))
+            (progn
+              (end-of-line)
+              (insert "\n"))
+          (forward-line)
+          (beginning-of-line))
+        (insert "#+" key ": " value "\n")))))
+
+(defun org-fc-erase-keyword (keyword)
+  "Erase the line where the KEYWORD is, setting line from the top of the file."
+  (let ((case-fold-search t))
+    (org-with-point-at 1
+      (when (re-search-forward (concat "^#\\+" keyword ":") nil t)
+        (beginning-of-line)
+        (delete-region (point) (line-end-position))
+        (delete-char 1)))))
+
 ;;; Card Initialization
 
 (defun org-fc--init-card (type)
@@ -286,6 +387,7 @@ If point is not inside a flashcard entry, an error is raised."
 Should only be used by the init functions of card TYPEs."
   (if (org-fc-entry-p)
       (error "Headline is already a flashcard"))
+  (if (org-before-first-heading-p))
   (org-back-to-heading)
   (org-set-property
    org-fc-created-property
