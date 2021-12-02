@@ -354,7 +354,7 @@ drawer, if necessary.  Returned position ignores narrowing.
 BEGINNING is the start of the first line inside the drawer,
 END is the start of the line with :END: on it."
   (org-with-wide-buffer
-   (org-end-of-meta-data)
+   (org-fc-end-of-meta-data)
    (let ((regexp (concat "^[ \t]*:" (regexp-quote org-fc-review-data-drawer) ":[ \t]*$"))
          (end (if (org-at-heading-p) (point)
                 (save-excursion (outline-next-heading) (point))))
