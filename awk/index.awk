@@ -58,6 +58,7 @@ BEGINFILE {
     # Reset filetags
     delete parent_tags;
     file_title = "";
+    title = "";
     parent_tags[0] = "";
     state = state_file;
 
@@ -97,6 +98,14 @@ $0 ~ review_data_drawer {
 }
 
 
+## File Title
+
+match($0, /^#\+(TITLE|title):[ \t]+(.*)/, a) {
+    # Combine tags to handle multiple FILETAGS lines
+    file_title = a[2]
+    next;
+}
+
 ## File Tags
 
 match($0, /^#\+(FILETAGS|filetags):[ \t]+(.*)/, a) {
@@ -106,41 +115,33 @@ match($0, /^#\+(FILETAGS|filetags):[ \t]+(.*)/, a) {
     next;
 }
 
-## File Title
-
-match($0, /^#\+(TITLE|title):[ \t]+(.*)/, a) {
-    # Combine tags to handle multiple FILETAGS lines
-    file_title = a[2]
-    next;
-}
 
 ## Heading Parsing
 
-# match($0, /^(\*+)[ \t]+(.*)$/, a) {
-#     level = length(a[1]);
-#     title = a[2];
-#     tags = "";
+match($0, /^(\*+)[ \t]+(.*)$/, a) {
+    level = length(a[1]);
+    title = a[2];
+    tags = "";
 
-#     # tag re based on org-tag-re
-#     # this only guarantees that there is at least one tab/space
-#     # between the headline text and the tags.
-#     # TODO: Do this in a single match
-#     if (match(title, /^(.*)[ \t]+(:([[:alnum:]_@#%]+:)+)$/, b) != 0) {
-#         title = b[1];
-#         # remove trailing tabs/spaces
-#         sub(/[ \t]*$/, "", title);
-#         tags = b[2];
-#     }
-#     parent_tags[level] = tags;
+    # tag re based on org-tag-re
+    # this only guarantees that there is at least one tab/space
+    # between the headline text and the tags.
+    # TODO: Do this in a single match
+    if (match(title, /^(.*)[ \t]+(:([[:alnum:]_@#%]+:)+)$/, b) != 0) {
+        title = b[1];
+        # remove trailing tabs/spaces
+        sub(/[ \t]*$/, "", title);
+        tags = b[2];
+    }
+    parent_tags[level] = tags;
 
-#     id = "none";
+    id = "none";
 
-#     if (tags ~ fc_tag) {
-#         state = state_card;
-#         suspended = (tags ~ suspended_tag);
-#     }
-#     next;
-# }
+    if (tags ~ fc_tag) {
+        suspended = (tags ~ suspended_tag);
+    }
+    next;
+}
 
 
 /:END:/ {
@@ -149,25 +150,31 @@ match($0, /^#\+(TITLE|title):[ \t]+(.*)/, a) {
     } else if (state == state_review_data_body) {
         state = state_review_data_done;
         # Card header
-        # inherited_tags = "";
-        # for (i = 0; i < level; i++) {
-        #     inherited_tags = combine_tags(inherited_tags, parent_tags[i]);
-        # }
-        # local_tags = parent_tags[level];
+        inherited_tags = "";
+        for (i = 0; i < level; i++) {
+            inherited_tags = combine_tags(inherited_tags, parent_tags[i]);
+        }
+        local_tags = parent_tags[level];
 
         cloze_type = ""
         if (cloze_type_property in properties)
             cloze_type = " :cloze-type " properties[cloze_type_property]
 
+        if (title) { title = escape_string(title); }
+        else if (title == "")
+        { title = escape_string(file_title); }
+        else if (file_title == "")
+        { title = "nil"; }
+
         print "    (" \
             ":id " escape_string(properties["ID"])  \
-            " :title " escape_string(file_title)  \
+            " :title " title         \
             " :type " properties[type_property]     \
             cloze_type                                            \
             " :created " parse_time(properties[created_property]) \
             " :suspended " (suspended ? "t" : "nil")   \
-            " :inherited-tags " escape_string(parent_tags[0])  \
-            " :local-tags " escape_string(parent_tags[0])          \
+            " :inherited-tags " escape_string(inherited_tags)   \
+            " :local-tags " escape_string(parent_tags[level])   \
             " :positions (";
 
         # Card positions
