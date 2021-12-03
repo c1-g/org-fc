@@ -504,7 +504,7 @@ make it bold."
               (setq end (point))
             (error "No :END: found for drawer"))
           (if (member name org-fc-drawer-whitelist)
-              (org-flag-drawer nil nil start end)
+              (org-hide-drawer-toggle 'off t)
             (org-fc-hide-region start end)))))))
 
 ;;;; Hiding Headings / Section Contents
