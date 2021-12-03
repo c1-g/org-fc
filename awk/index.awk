@@ -43,12 +43,11 @@ BEGIN {
     # Small state machine to make sure cards are in the correct format
     state = 0;
     state_file = 0;
-    state_card = 1;
-    state_properties = 2;
-    state_properties_done = 3;
-    state_review_data = 4;
-    state_review_data_body = 5;
-    state_review_data_done = 6;
+    state_properties = 1;
+    state_properties_done = 2;
+    state_review_data = 3;
+    state_review_data_body = 4;
+    state_review_data_done = 5;
 
     print "(";
 }
@@ -73,57 +72,13 @@ ENDFILE {
     print "  )  :title " (file_title ? escape_string(file_title) : "nil") ")";
 }
 
-## File Tags
-
-match($0, /^#\+(FILETAGS|filetags):[ \t]+(.*)/, a) {
-    # Combine tags to handle multiple FILETAGS lines
-    parent_tags[0] = combine_tags(a[2], parent_tags[0]);
-    next;
-}
-
-## File Title
-
-match($0, /^#\+(TITLE|title):[ \t]+(.*)/, a) {
-    # Combine tags to handle multiple FILETAGS lines
-    file_title = a[2]
-    next;
-}
-
-## Heading Parsing
-
-match($0, /^(\*+)[ \t]+(.*)$/, a) {
-    level = length(a[1]);
-    title = a[2];
-    tags = "";
-
-    # tag re based on org-tag-re
-    # this only guarantees that there is at least one tab/space
-    # between the headline text and the tags.
-    # TODO: Do this in a single match
-    if (match(title, /^(.*)[ \t]+(:([[:alnum:]_@#%]+:)+)$/, b) != 0) {
-        title = b[1];
-        # remove trailing tabs/spaces
-        sub(/[ \t]*$/, "", title);
-        tags = b[2];
-    }
-    parent_tags[level] = tags;
-
-    id = "none";
-
-    if (tags ~ fc_tag) {
-        state = state_card;
-        suspended = (tags ~ suspended_tag);
-    }
-    next;
-}
-
 ## Drawer Parsing
 
 /:PROPERTIES:/ {
-    if (state == state_card) {
+    # if (state == state_file) {
         state = state_properties;
         delete properties;
-    }
+    # }
     next;
 }
 
@@ -141,17 +96,64 @@ $0 ~ review_data_drawer {
     next;
 }
 
+
+## File Tags
+
+match($0, /^#\+(FILETAGS|filetags):[ \t]+(.*)/, a) {
+    # Combine tags to handle multiple FILETAGS lines
+    parent_tags[0] = combine_tags(a[2], parent_tags[0]);
+    suspended = (parent_tags[0] ~ suspended_tag);
+    next;
+}
+
+## File Title
+
+match($0, /^#\+(TITLE|title):[ \t]+(.*)/, a) {
+    # Combine tags to handle multiple FILETAGS lines
+    file_title = a[2]
+    next;
+}
+
+## Heading Parsing
+
+# match($0, /^(\*+)[ \t]+(.*)$/, a) {
+#     level = length(a[1]);
+#     title = a[2];
+#     tags = "";
+
+#     # tag re based on org-tag-re
+#     # this only guarantees that there is at least one tab/space
+#     # between the headline text and the tags.
+#     # TODO: Do this in a single match
+#     if (match(title, /^(.*)[ \t]+(:([[:alnum:]_@#%]+:)+)$/, b) != 0) {
+#         title = b[1];
+#         # remove trailing tabs/spaces
+#         sub(/[ \t]*$/, "", title);
+#         tags = b[2];
+#     }
+#     parent_tags[level] = tags;
+
+#     id = "none";
+
+#     if (tags ~ fc_tag) {
+#         state = state_card;
+#         suspended = (tags ~ suspended_tag);
+#     }
+#     next;
+# }
+
+
 /:END:/ {
     if (state == state_properties) {
         state = state_properties_done;
     } else if (state == state_review_data_body) {
         state = state_review_data_done;
         # Card header
-        inherited_tags = "";
-        for (i = 0; i < level; i++) {
-            inherited_tags = combine_tags(inherited_tags, parent_tags[i]);
-        }
-        local_tags = parent_tags[level];
+        # inherited_tags = "";
+        # for (i = 0; i < level; i++) {
+        #     inherited_tags = combine_tags(inherited_tags, parent_tags[i]);
+        # }
+        # local_tags = parent_tags[level];
 
         cloze_type = ""
         if (cloze_type_property in properties)
@@ -159,13 +161,13 @@ $0 ~ review_data_drawer {
 
         print "    (" \
             ":id " escape_string(properties["ID"])  \
-            " :title " escape_string(title)  \
+            " :title " escape_string(file_title)  \
             " :type " properties[type_property]     \
             cloze_type                                            \
             " :created " parse_time(properties[created_property]) \
             " :suspended " (suspended ? "t" : "nil")   \
-            " :inherited-tags " escape_string(inherited_tags)  \
-            " :local-tags " escape_string(local_tags)          \
+            " :inherited-tags " escape_string(parent_tags[0])  \
+            " :local-tags " escape_string(parent_tags[0])          \
             " :positions (";
 
         # Card positions
