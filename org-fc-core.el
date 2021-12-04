@@ -244,17 +244,17 @@ If point is not inside a flashcard entry, an error is raised."
 
 (defun org-fc-entry-p ()
   "Check if the current heading is a flashcard."
-  (member org-fc-flashcard-tag (org-get-tags nil 'local)))
+  (member org-fc-flashcard-tag (org-fc--get-tags)))
 
 (defun org-fc-suspended-entry-p ()
   "Check if the current heading is a suspended flashcard."
-  (let ((tags (org-get-tags nil 'local)))
+  (let ((tags (org-fc--get-tags)))
     (and (member org-fc-flashcard-tag tags)
          (member org-fc-suspended-tag tags))))
 
 (defun org-fc-part-of-entry-p ()
   "Check if the current heading belongs to a flashcard."
-  (member org-fc-flashcard-tag (org-get-tags nil)))
+  (member org-fc-flashcard-tag (org-fc--get-tags)))
 
 (defun org-fc-up-heading-or-point-min ()
   "Fixed version of Org's `org-up-heading-or-point-min'."
@@ -291,13 +291,13 @@ If point is not inside a flashcard entry, an error is raised."
                                          (cons tag (org-fc--get-tags)))))
     (org-set-tags
      (cl-remove-duplicates
-      (cons tag (org-get-tags nil 'local))
+      (cons tag (org-fc--get-tags))
       :test #'string=))))
 
 (defun org-fc--remove-tag (tag)
   "Add TAG to the heading at point."
   (org-set-tags
-   (remove tag (org-get-tags nil 'local))))
+   (remove tag (org-fc--get-tags))))
 
 ;;; Dealing with keywords
 ;; Thank you, org-roam.
@@ -572,7 +572,7 @@ See `org-show-set-visibility' for possible values"
   "Narrow the outline tree.
 Only parent headings of the current heading remain visible."
   (interactive)
-  (let* ((tags (org-get-tags nil 'local)))
+  (let* ((tags (org-fc--get-tags)))
       ;; Find the first heading with a :narrow: tag or the top level
       ;; ancestor of the current heading and narrow to its region
       (save-excursion
