@@ -281,10 +281,18 @@ If point is not inside a flashcard entry, an error is raised."
 
 (defun org-fc--add-tag (tag)
   "Add TAG to the heading at point."
-  (org-set-tags
-   (cl-remove-duplicates
-    (cons tag (org-get-tags nil 'local))
-    :test #'string=)))
+  (if (org-before-first-heading-p)
+      (let ((current-tags (split-string
+                           (or (cadr (assoc "FILETAGS"
+                                            (org-collect-keywords '("filetags"))))
+                               "")
+                           ":" 'omit-nulls)))
+        (org-fc-set-keyword "filetags" (org-make-tag-string
+                                        (cl-remove-duplicates (cons tag current-tags)))))
+    (org-set-tags
+     (cl-remove-duplicates
+      (cons tag (org-get-tags nil 'local))
+      :test #'string=))))
 
 (defun org-fc--remove-tag (tag)
   "Add TAG to the heading at point."
@@ -293,6 +301,24 @@ If point is not inside a flashcard entry, an error is raised."
 
 ;;; Dealing with keywords
 ;; Thank you, org-roam.
+
+(defun org-fc-set-keyword (key value)
+  "Set keyword KEY to VALUE.
+If the property is already set, it's value is replaced."
+  (org-with-point-at 1
+    (let ((case-fold-search t))
+      (if (re-search-forward (concat "^#\\+" key ":\\(.*\\)") (point-max) t)
+          (if (string-blank-p value)
+              (kill-whole-line)
+            (replace-match (concat " " value) 'fixedcase nil nil 1))
+        (org-roam-end-of-meta-data 'drawers)
+        (if (save-excursion (end-of-line) (eobp))
+            (progn
+              (end-of-line)
+              (insert "\n"))
+          (forward-line)
+          (beginning-of-line))
+        (insert "#+" key ": " value "\n")))))
 
 (defun org-fc-get-keyword (name &optional file bound)
   "Return keyword property NAME from an org FILE.
