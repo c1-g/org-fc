@@ -280,7 +280,7 @@ rating the card."
   (org-fc-with-point-at-entry
    ;; If the card is marked as a demo card, don't log its reviews and
    ;; don't update its review data
-   (unless (member org-fc-demo-tag (org-get-tags))
+   (unless (member org-fc-demo-tag (org-fc--get-tags))
      (let* ((data (org-fc-review-data-get))
             (current (assoc position data #'string=)))
        (unless current
