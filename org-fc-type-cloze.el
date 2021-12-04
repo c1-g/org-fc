@@ -161,7 +161,8 @@ Processes all holes in the card text."
   "Prepare POSITION of a cloze card for review."
   (setq org-fc-type-cloze--text nil)
   (setq org-fc-type-cloze--hint nil)
-  (outline-hide-subtree)
+  (unless (org-before-first-heading-p)
+    (outline-hide-subtree))
   (org-show-entry)
   (org-fc-type-cloze-hide-holes (string-to-number position)))
 
