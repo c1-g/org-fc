@@ -279,16 +279,16 @@ If point is not inside a flashcard entry, an error is raised."
 
 ;;; Adding / Removing Tags
 
+(defun org-fc--get-tags ()
+  "Get tags of heading at point or the file tags if there're no local tags."
+  (or (org-get-tags nil 'local) org-file-tags))
+
 (defun org-fc--add-tag (tag)
   "Add TAG to the heading at point."
   (if (org-before-first-heading-p)
-      (let ((current-tags (split-string
-                           (or (cadr (assoc "FILETAGS"
-                                            (org-collect-keywords '("filetags"))))
-                               "")
-                           ":" 'omit-nulls)))
-        (org-fc-set-keyword "filetags" (org-make-tag-string
-                                        (cl-remove-duplicates (cons tag current-tags)))))
+      (org-fc-set-keyword "FILETAGS" (org-make-tag-string
+                                        (cl-remove-duplicates
+                                         (cons tag (org-fc--get-tags)))))
     (org-set-tags
      (cl-remove-duplicates
       (cons tag (org-get-tags nil 'local))
