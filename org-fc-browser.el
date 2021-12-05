@@ -32,7 +32,14 @@
   "A function which lists cards in the format proper for `tabulated-list-entries'
 
 The function will be passed an index from `org-fc-index' and must return
-a list of vector for it.")
+a list of vector for it."
+  :type 'function
+  :group 'org-fc)
+
+(defcustom org-fc-browser-title-length 70
+  "Length for the string of a title."
+  :type 'integer
+  :group 'org-fc)
 
 (define-derived-mode org-fc-browser-mode tabulated-list-mode "org-fc browser"
   "Major mode for browsing flashcards created by org-fc."
@@ -69,11 +76,11 @@ a list of vector for it.")
          (index (org-fc-index context)))
     (with-current-buffer buf
       (erase-buffer)
-      (setq tabulated-list-format '[("No." 5 t)
-                                    ("Title" 70 nil)
-                                    ("Intrv" 10 t)
-                                    ("Due" 20 t)
-                                    ("Type" 10 nil)])
+      (setq tabulated-list-format `[("No." 5 t)
+                                   ("Title" ,org-fc-browser-title-length nil)
+                                   ("Intrv" 10 t)
+                                   ("Due" 20 t)
+                                   ("Type" 10 nil)])
       (setq tabulated-list-entries (funcall org-fc-browser-list-entries-function
                                             index))
       (setq tabulated-list-padding 1)
@@ -90,7 +97,8 @@ a list of vector for it.")
                     (vector (number-to-string i)
                             (or (if (string-empty-p (plist-get card-plist :title))
                                     (plist-get card-plist :filetitle)
-                                  (plist-get card-plist :title)) "No title")
+                                  (plist-get card-plist :title))
+                                "No title")
                             (number-to-string (plist-get positions :interval))
                             (format-time-string
                              "%FT%TZ"
