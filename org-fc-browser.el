@@ -79,18 +79,14 @@ a list of vector for it.")
              (positions (car (plist-get card-plist :positions))))
         (push (list (plist-get card-plist :id)
                     (vector (number-to-string i)
-
                             (or (if (string-empty-p (plist-get card-plist :title))
                                     (plist-get card-plist :filetitle)
                                   (plist-get card-plist :title)) "No title")
-
                             (number-to-string (plist-get positions :interval))
-
                             (format-time-string
                              "%FT%TZ"
                              (plist-get positions :due)
                              "UTC0")
-
                             (symbol-name (plist-get card-plist :type))))
               result)))
     (nreverse result)))
