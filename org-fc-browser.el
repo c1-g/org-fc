@@ -47,32 +47,55 @@ a list of vector for it.")
 
 (defun org-fc-browser-draw-buffer (context)
   "Draw a buffer with a list of all cards for CONTEXT."
-  (let* ((buf (get-buffer-create org-fc-dashboard-buffer-name))
+  (let* ((buf (get-buffer-create org-fc-browser-buffer-name))
          (inhibit-read-only t)
-         (index (org-fc-index context))
-         (stats (org-fc-dashboard-stats index))
-         (created-stats (plist-get stats :created))
-         (due-stats (plist-get stats :due))
-         (reviews-stats (org-fc-awk-stats-reviews)))
+         (index (org-fc-index context)))
     (with-current-buffer buf
       (erase-buffer)
-      (setq tabulated-list-format `[("No." 5 t)
-                                    ("Title" 80 t)
-                                    ("Intrv" 4 t)
+      (setq tabulated-list-format '[("No." 5 t)
+                                    ("Title" 70 nil)
+                                    ("Intrv" 10 t)
                                     ("Due" 20 t)
                                     ("Type" 10 nil)])
       (setq tabulated-list-entries (funcall org-fc-browser-list-entries-function
-                                            index)))))
+                                            index))
+      (tabulated-list-init-header)
+      (tabulated-list-print))))
+
+(defun org-fc-browser-list-entries-default (index)
+  "Return a list in the form of (CARD-ID [NUMBER TITLE INTERVAL DUE-DATE TYPE])"
+  (let (result)
+    (dotimes (i (length index))
+      (let* ((card-plist (nth i index))
+             (positions (car (plist-get card-plist :positions))))
+        (push (list (plist-get card-plist :id)
+                    (vector (number-to-string i)
+
+                            (or (if (string-empty-p (plist-get card-plist :title))
+                                    (plist-get card-plist :filetitle)
+                                  (plist-get card-plist :title)) "No title")
+
+                            (number-to-string (plist-get positions :interval))
+
+                            (format-time-string
+                             "%FT%TZ"
+                             (plist-get positions :due)
+                             "UTC0")
+
+                            (symbol-name (plist-get card-plist :type))))
+              result)))
+    (nreverse result)))
 
 
 ;;;###autoload
 (defun org-fc-browser (context)
   "Open a buffer showing a list of all cards from CONTEXT."
   (interactive (list (org-fc-select-context)))
-  (switch-to-buffer org-fc-browser-buffer-name)
   (org-fc-browser-draw-buffer context)
-  (goto-char (point-min))
-  (org-fc-browser-mode))
+  (switch-to-buffer org-fc-browser-buffer-name)
+  (unless (eq major-mode 'org-fc-browser-mode)
+    (org-fc-browser-mode))
+  (goto-char (point-min)))
 
 (provide 'org-fc-browser)
 ;;; org-fc-browser.el ends here
