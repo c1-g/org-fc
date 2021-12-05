@@ -43,8 +43,9 @@ a list of vector for it.")
 
 (defvar org-fc-browser-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "n" #'next-line)
-    (define-key map "p" #'previous-line)
+    (define-key map (kbd "n") #'next-line)
+    (define-key map (kbd "p") #'previous-line)
+    (define-key map (kbd "<return>") #'org-fc-browser-open-id)
     map)
   "Keymap for `org-fc-browser-mode'.")
 
@@ -57,6 +58,9 @@ a list of vector for it.")
   "docstring"
   (nth (1- (line-number-at-pos)) tabulated-list-entries))
 
+(defun org-fc-browser-open-id ()
+  (interactive)
+  (org-id-open (car (org-fc-browser--get-current-card))  nil))
 
 (defun org-fc-browser-draw-buffer (context)
   "Draw a buffer with a list of all cards for CONTEXT."
