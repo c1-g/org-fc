@@ -34,9 +34,12 @@
 The function will be passed an index from `org-fc-index' and must return
 a list of vector for it.")
 
-
 (define-derived-mode org-fc-browser-mode tabulated-list-mode "org-fc browser"
-  "Major mode for browsing flashcards created by org-fc.")
+  "Major mode for browsing flashcards created by org-fc."
+  (set (make-local-variable 'revert-buffer-function) #'org-fc-browser-revert))
+
+(defvar org-fc-browser-context org-fc-context-all
+  "Context of the current dashboard view.")
 
 (defvar org-fc-browser-mode-map
   (let ((map (make-sparse-keymap)))
@@ -44,6 +47,11 @@ a list of vector for it.")
     (define-key map "p" #'previous-line)
     map)
   "Keymap for `org-fc-browser-mode'.")
+
+(defun org-fc-browser-revert (_ignore-auto _noconfirm)
+  "Reload the current dashboard."
+  (interactive)
+  (org-fc-browser-draw-buffer org-fc-browser-context))
 
 (defun org-fc-browser-draw-buffer (context)
   "Draw a buffer with a list of all cards for CONTEXT."
@@ -59,6 +67,7 @@ a list of vector for it.")
                                     ("Type" 10 nil)])
       (setq tabulated-list-entries (funcall org-fc-browser-list-entries-function
                                             index))
+      (setq tabulated-list-padding 1)
       (tabulated-list-init-header)
       (tabulated-list-print))))
 
@@ -91,6 +100,7 @@ a list of vector for it.")
 (defun org-fc-browser (context)
   "Open a buffer showing a list of all cards from CONTEXT."
   (interactive (list (org-fc-select-context)))
+  (setq org-fc-browser-context context)
   (org-fc-browser-draw-buffer context)
   (switch-to-buffer org-fc-browser-buffer-name)
   (unless (eq major-mode 'org-fc-browser-mode)
