@@ -28,6 +28,12 @@
   :type 'string
   :group 'org-fc)
 
+(defcustom org-fc-browser-list-entries-function #'org-fc-browser-list-entries-default
+  "A function which lists cards in the format proper for `tabulated-list-entries'
+
+The function will be passed an index from `org-fc-index' and must return
+a list of vector for it.")
+
 
 (define-derived-mode org-fc-browser-mode tabulated-list-mode "org-fc browser"
   "Major mode for browsing flashcards created by org-fc.")
@@ -40,7 +46,23 @@
   "Keymap for `org-fc-browser-mode'.")
 
 (defun org-fc-browser-draw-buffer (context)
-  "Draw a buffer with a list of all cards for CONTEXT.")
+  "Draw a buffer with a list of all cards for CONTEXT."
+  (let* ((buf (get-buffer-create org-fc-dashboard-buffer-name))
+         (inhibit-read-only t)
+         (index (org-fc-index context))
+         (stats (org-fc-dashboard-stats index))
+         (created-stats (plist-get stats :created))
+         (due-stats (plist-get stats :due))
+         (reviews-stats (org-fc-awk-stats-reviews)))
+    (with-current-buffer buf
+      (erase-buffer)
+      (setq tabulated-list-format `[("No." 5 t)
+                                    ("Title" 80 t)
+                                    ("Intrv" 4 t)
+                                    ("Due" 20 t)
+                                    ("Type" 10 nil)])
+      (setq tabulated-list-entries (funcall org-fc-browser-list-entries-function
+                                            index)))))
 
 
 ;;;###autoload
