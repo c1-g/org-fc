@@ -257,6 +257,7 @@ indenting the current heading."
 (defmacro org-fc-with-point-at-entry (&rest body)
   "Execute BODY with point at the card heading.
 If point is not inside a flashcard entry, an error is raised."
+  (declare (debug (body)))
   `(save-excursion
      (unless (org-before-first-heading-p)
         (org-fc-goto-entry-heading))
@@ -265,6 +266,7 @@ If point is not inside a flashcard entry, an error is raised."
 (defmacro org-fc-with-point-at-back-heading (&rest body)
   "Execute BODY with point at the card's back heading.
 If point is not inside a flashcard entry, an error is raised."
+  (declare (debug (body)))
   `(if-let ((pos (org-fc-back-heading-position)))
        (save-excursion
          (goto-char pos)
