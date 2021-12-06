@@ -24,7 +24,7 @@
 
 ;;; Code:
 (defcustom org-fc-browser-buffer-name "*org-fc Browser*"
-  "Name of the buffer to use for displaying the dashboard view."
+  "Name of the buffer to use for displaying the browser view."
   :type 'string
   :group 'org-fc)
 
@@ -63,20 +63,21 @@ a list of vector for it."
   (tabulated-list-init-header))
 
 (defvar org-fc-browser-context org-fc-context-all
-  "Context of the current dashboard view.")
+  "Context of the current browser view.")
 
 (defun org-fc-browser-revert (_ignore-auto _noconfirm)
-  "Reload the current dashboard."
+  "Reload the browser."
   (interactive)
+  (setq tabulated-list-entries (funcall org-fc-browser-list-entries-function))
   (org-fc-browser-draw-buffer org-fc-browser-context))
 
 (defun org-fc-browser--get-current-card ()
-  "docstring"
+  "Get entry at point from `tabulated-list-entries'."
   (nth (1- (line-number-at-pos)) tabulated-list-entries))
 
 (defun org-fc-browser-open-id ()
   (interactive)
-  (org-id-open (car (org-fc-browser--get-current-card))  nil))
+  (org-id-open (car (org-fc-browser--get-current-card)) nil))
 
 (defun org-fc-browser-draw-buffer (context)
   "Draw a buffer with a list of all cards for CONTEXT."
@@ -87,25 +88,26 @@ a list of vector for it."
       (tabulated-list-print))))
 
 (defun org-fc-browser-list-entries-default ()
-  "Return a list in the form of (CARD-ID [NUMBER TITLE INTERVAL DUE-DATE TYPE])"
+  "Return a list with each element in the form of (CARD-ID [NUMBER TITLE INTERVAL DUE-DATE TYPE])
+from calling `org-fc-index' with `org-fc-browser-context' as its argument."
   (let ((index (org-fc-index org-fc-browser-context))
         res)
-    (dotimes (i (length index))
-      (let* ((card-plist (nth i index))
-             (positions (car (plist-get card-plist :positions))))
-        (push (list (plist-get card-plist :id)
-                    (vector (number-to-string i)
-                            (or (if (string-empty-p (plist-get card-plist :title))
-                                    (plist-get card-plist :filetitle)
-                                  (plist-get card-plist :title))
-                                "No title")
-                            (number-to-string (plist-get positions :interval))
-                            (format-time-string
-                             "%FT%TZ"
-                             (plist-get positions :due)
-                             "UTC0")
-                            (symbol-name (plist-get card-plist :type))))
-              res)))
+    (while (progn
+             (let* ((card-plist (pop index))
+                    (positions (car (plist-get card-plist :positions))))
+               (push (list (plist-get card-plist :id)
+                           (vector (or (if (string-empty-p (plist-get card-plist :title))
+                                           (plist-get card-plist :filetitle)
+                                         (plist-get card-plist :title))
+                                       "No title")
+                                   (number-to-string (plist-get positions :interval))
+                                   (format-time-string
+                                    "%FT%TZ"
+                                    (plist-get positions :due)
+                                    "UTC0")
+                                   (symbol-name (plist-get card-plist :type))))
+                     res)
+               index)))
     (nreverse res)))
 
 
