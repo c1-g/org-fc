@@ -41,12 +41,6 @@ a list of vector for it."
   :type 'integer
   :group 'org-fc)
 
-(define-derived-mode org-fc-browser-mode tabulated-list-mode "org-fc browser"
-  "Major mode for browsing flashcards created by org-fc."
-  (set (make-local-variable 'revert-buffer-function) #'org-fc-browser-revert))
-
-(defvar org-fc-browser-context org-fc-context-all
-  "Context of the current dashboard view.")
 
 (defvar org-fc-browser-mode-map
   (let ((map (make-sparse-keymap)))
@@ -55,6 +49,21 @@ a list of vector for it."
     (define-key map (kbd "<return>") #'org-fc-browser-open-id)
     map)
   "Keymap for `org-fc-browser-mode'.")
+
+
+(define-derived-mode org-fc-browser-mode tabulated-list-mode "org-fc browser"
+  "Major mode for browsing flashcards created by org-fc."
+  (setq-local revert-buffer-function #'org-fc-browser-revert)
+  (setq tabulated-list-format `[("Title" ,org-fc-browser-title-length nil)
+                                ("Intrv" 6 t)
+                                ("Due" 20 t)
+                                ("Type" 10 nil)])
+  (setq tabulated-list-entries (funcall org-fc-browser-list-entries-function))
+  (setq tabulated-list-padding 1)
+  (tabulated-list-init-header))
+
+(defvar org-fc-browser-context org-fc-context-all
+  "Context of the current dashboard view.")
 
 (defun org-fc-browser-revert (_ignore-auto _noconfirm)
   "Reload the current dashboard."
@@ -72,24 +81,15 @@ a list of vector for it."
 (defun org-fc-browser-draw-buffer (context)
   "Draw a buffer with a list of all cards for CONTEXT."
   (let* ((buf (get-buffer-create org-fc-browser-buffer-name))
-         (inhibit-read-only t)
-         (index (org-fc-index context)))
+         (inhibit-read-only t))
     (with-current-buffer buf
       (erase-buffer)
-      (setq tabulated-list-format `[("No." 5 t)
-                                   ("Title" ,org-fc-browser-title-length nil)
-                                   ("Intrv" 10 t)
-                                   ("Due" 20 t)
-                                   ("Type" 10 nil)])
-      (setq tabulated-list-entries (funcall org-fc-browser-list-entries-function
-                                            index))
-      (setq tabulated-list-padding 1)
-      (tabulated-list-init-header)
       (tabulated-list-print))))
 
-(defun org-fc-browser-list-entries-default (index)
+(defun org-fc-browser-list-entries-default ()
   "Return a list in the form of (CARD-ID [NUMBER TITLE INTERVAL DUE-DATE TYPE])"
-  (let (result)
+  (let ((index (org-fc-index org-fc-browser-context))
+        res)
     (dotimes (i (length index))
       (let* ((card-plist (nth i index))
              (positions (car (plist-get card-plist :positions))))
@@ -105,8 +105,8 @@ a list of vector for it."
                              (plist-get positions :due)
                              "UTC0")
                             (symbol-name (plist-get card-plist :type))))
-              result)))
-    (nreverse result)))
+              res)))
+    (nreverse res)))
 
 
 ;;;###autoload
@@ -114,11 +114,11 @@ a list of vector for it."
   "Open a buffer showing a list of all cards from CONTEXT."
   (interactive (list (org-fc-select-context)))
   (setq org-fc-browser-context context)
-  (org-fc-browser-draw-buffer context)
   (switch-to-buffer org-fc-browser-buffer-name)
   (unless (eq major-mode 'org-fc-browser-mode)
-    (org-fc-browser-mode))
-  (goto-char (point-min)))
+    (org-fc-browser-mode)
+    (goto-char (point-min)))
+  (org-fc-browser-draw-buffer context))
 
 (provide 'org-fc-browser)
 ;;; org-fc-browser.el ends here
