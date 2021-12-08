@@ -28,10 +28,13 @@
 ;; See: https://github.com/d12frosted/vulpea.
 
 ;;; Code:
+(require 'org-fc-core)
+(require 'org-fc-review)
+
 (require 'org-roam)
 (require 'org-roam-db)
 
-(defconst org-fc-roam--schemata
+(defconst org-fc-roam-db--schemata
   '((review-history
      ([(node-id :not-null)
        (title :not-null)
@@ -82,6 +85,129 @@ GET-DB is a function that returns connection to database."
                      index-name table columns))))
       (setq org-fc-roam-db--initalized t))
     db))
+
+;;;###autoload
+(define-minor-mode org-fc-roam-db-autosync-mode
+  "Global minor mode to automatically synchronise org-fc-roam db."
+  :global t
+  :group 'org-fc
+  :init-value nil
+  (let ((enabled org-fc-roam-db-autosync-mode))
+    (cond (enabled
+           (setq org-fc-roam-db--initalized nil)
+           ;; attach custom schemata
+           (seq-each
+            (lambda (schema)
+              (add-to-list 'org-roam-db--table-schemata schema 'append))
+            org-fc-roam-db--schemata)
+
+           ;; attach custom indices
+           (seq-each
+            (lambda (index)
+              (add-to-list 'org-roam-db--table-indices index 'append))
+            org-fc-roam-db--indices)
+
+           ;; make sure that extra tables exist table exists
+           (advice-add 'org-roam-db :around #'org-fc-roam-db--init)
+
+           ;; make sure that all data is inserted into table
+           (advice-add
+            'org-roam-db-insert-file-node
+            :after
+            #'org-fc-roam-db-insert-file-note))
+          (t
+           (setq org-fc-roam-db--initalized nil)
+           ;; (advice-remove 'org-roam-db-map-links #'org-fc-roam-db-insert-links)
+           ;; (advice-remove
+           ;;  'org-roam-db-insert-node-data #'org-fc-roam-db-insert-outline-note)
+           (advice-remove
+            'org-roam-db-insert-file-node #'org-fc-roam-db-insert-file-note)
+           (advice-remove 'org-roam-db #'org-fc-roam-db--init)
+           (seq-each
+            (lambda (schema)
+              (setq org-roam-db--table-schemata
+                    (delete schema org-roam-db--table-schemata)))
+            org-fc-roam-db--schemata)
+           (seq-each
+            (lambda (index)
+              (setq org-roam-db--table-indices
+                    (delete index org-roam-db--table-indices)))
+            org-fc-roam-db--indices)))))
+
+;;;###autoload
+(defun org-fc-roam-db-autosync-enable ()
+  "Activate function `org-fc-roam-db-autosync-mode'."
+  (org-fc-roam-db-autosync-mode +1))
+
+(defun org-fc-roam-db-autosync-disable ()
+  "Deactivate function `org-fc-roam-db-autosync-mode'."
+  (org-fc-roam-db-autosync-mode -1))
+
+(defun org-fc-roam-db-autosync-toggle ()
+  "Toggle status of function `org-fc-roam-db-autosync-mode'."
+  (org-fc-roam-db-autosync-mode 'toggle))
+
+
+(defun org-fc-roam-db-insert-file-note ()
+  "Insert file level note into `org-fc-roam' database."
+  (org-with-point-at 1
+    (when (and (= (org-outline-level) 0)
+               (org-roam-db-node-p))
+      (when-let ((id (org-id-get)))
+        (let* ((file (buffer-file-name (buffer-base-buffer)))
+               (title (org-link-display-format
+                       (or (cadr
+                            (assoc "TITLE"
+                                   (org-collect-keywords '("title"))
+                                   #'string-equal))
+                           (file-relative-name
+                            file org-roam-directory))))
+               (tags org-file-tags)
+               (properties (org-entry-properties))
+               (cloze-p (string= (org-entry-get nil org-fc-type-property) "cloze")))
+          
+          (when (member org-fc-flashcard-tag org-file-tags)
+            (org-roam-db-query
+             [:insert :into review-history
+                      :values $v1]
+             (vector id (or title "") 0 "" "1:0" (org-fc-timestamp-in 0) 0 0 2.5 ""))))))))
+
+(defun org-fc-roam-db-insert-outline-note ()
+  "Insert outline level note into `org-fc-roam' database."
+  (when-let ((id (org-id-get)))
+    (let* ((file (buffer-file-name (buffer-base-buffer)))
+           (heading-components (org-heading-components))
+           (level (nth 1 heading-components))
+           (title
+            (or (nth 4 heading-components)
+                (progn (lwarn
+                        'org-roam
+                        :warning
+                        "Node in %s:%s:%s has no title, skipping..."
+                        file
+                        (line-number-at-pos)
+                        (1+ (- (point) (line-beginning-position))))
+                       (cl-return-from
+                           org-roam-db-insert-node-data))))
+           (properties (org-entry-properties))
+           (title (org-link-display-format title))
+           (tags (org-get-tags)))
+      (org-roam-db-query!
+       (lambda (err)
+         (lwarn 'org-roam :warning "%s for %s (%s) in %s"
+                (error-message-string err)
+                title id file))
+       [:insert :into notes
+        :values $v1]
+       (vector id
+               file
+               level
+               title
+               properties
+               aliases
+               tags
+               nil
+               nil)))))
 
 (provide 'org-fc-roam)
 ;;; org-fc-roam.el ends here
