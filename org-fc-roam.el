@@ -114,18 +114,18 @@ GET-DB is a function that returns connection to database."
            (advice-add
             'org-roam-db-insert-file-node
             :after
-            #'org-fc-roam-db-insert-file-note)
+            #'org-fc-roam-db-insert-file-review-history)
            (advice-add
             'org-roam-db-insert-node-data
             :after
-            #'org-fc-roam-db-insert-outline-note))
+            #'org-fc-roam-db-insert-outline-review-history))
           (t
            (setq org-fc-roam-db--initalized nil)
            ;; (advice-remove 'org-roam-db-map-links #'org-fc-roam-db-insert-links)
            (advice-remove
-            'org-roam-db-insert-node-data #'org-fc-roam-db-insert-outline-note)
+            'org-roam-db-insert-node-data #'org-fc-roam-db-insert-outline-review-history)
            (advice-remove
-            'org-roam-db-insert-file-node #'org-fc-roam-db-insert-file-note)
+            'org-roam-db-insert-file-node #'org-fc-roam-db-insert-file-review-history)
            (advice-remove 'org-roam-db #'org-fc-roam-db--init)
            (seq-each
             (lambda (schema)
@@ -152,8 +152,8 @@ GET-DB is a function that returns connection to database."
   (org-fc-roam-db-autosync-mode 'toggle))
 
 
-(defun org-fc-roam-db-insert-file-note ()
-  "Insert file level note into `org-fc-roam' database."
+(defun org-fc-roam-db-insert-file-review-history ()
+  "Insert file level review history into `org-roam' database."
   (org-with-point-at 1
     (when (and (= (org-outline-level) 0)
                (org-roam-db-node-p))
@@ -187,8 +187,8 @@ GET-DB is a function that returns connection to database."
                                 pos))
                       review-data))))))))
 
-(defun org-fc-roam-db-insert-outline-note ()
-  "Insert outline level note into `org-fc-roam' database."
+(defun org-fc-roam-db-insert-outline-review-history ()
+  "Insert outline level review history into `org-roam' database."
   (when-let ((id (org-id-get)))
     (let* ((file (buffer-file-name (buffer-base-buffer)))
            (heading-components (org-heading-components))
