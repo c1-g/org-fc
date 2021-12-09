@@ -163,7 +163,7 @@ GET-DB is a function that returns connection to database."
                                    #'string-equal))
                            (file-relative-name
                             file org-roam-directory))))
-               (review-history (org-review-history-get)))
+               (review-history (org-fc-review-history-get)))
 
           (when (and (member org-fc-flashcard-tag org-file-tags)
                      review-history)
@@ -172,7 +172,7 @@ GET-DB is a function that returns connection to database."
                       :values $v1]
              (seq-map (lambda (pos)
                         (mapcar (lambda (row)
-                                  (cl-destructuring-bind (id title pos ease box intrv due)
+                                  (cl-destructuring-bind (pos ease box intrv due)
                                       row
                                     (vector id
                                             (or title "")
