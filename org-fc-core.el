@@ -135,6 +135,36 @@ Does not apply to cloze single and cloze enumeration cards."
 
 ;;; Helper Functions
 
+(defun -split-when (fn list)
+  "Split the LIST on each element where FN returns non-nil.
+
+Unlike `-partition-by', the \"matched\" element is discarded from
+the results.  Empty lists are also removed from the result.
+
+This function can be thought of as a generalization of
+`split-string'."
+  (let (r s)
+    (while list
+      (if (not (funcall fn (car list)))
+          (push (car list) s)
+        (when s (push (nreverse s) r))
+        (setq s nil))
+      (setq list (cdr list)))
+    (when s (push (nreverse s) r))
+    (nreverse r)))
+
+(defmacro -split-on (item list)
+  "Split the LIST each time ITEM is found.
+
+Unlike `-partition-by', the ITEM is discarded from the results.
+Empty lists are also removed from the result.
+
+Comparison is done by `eq'.
+
+See also `-split-when'"
+  (declare (debug (def-form form)))
+  `(-split-when (lambda (it) (eq it ,item)) ,list))
+
 (defun org-fc-member-p (path)
   "Check if PATH is member of one of the `org-fc-directories'."
   (setq path (expand-file-name path))

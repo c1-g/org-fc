@@ -95,6 +95,44 @@
   'org-fc-audio-set-after
   'org-fc-audio-set-after-setup "0.1.0")
 
+(define-obsolete-function-alias
+  'org-fc-review-data-position
+  'org-fc-review-data-location
+  "0.2.0"
+  "The function actually returns the beginning and the end points in
+which the review data property drawer resides i.e. its location,
+naming it \"position\" might cause confusion with the \"position\" in
+the review data e.g. the \"front\" or the \"back\" of a card etc.")
+
+;; TODO: doc
+(defun org-fc-put-hline-review-data ()
+  (interactive)
+  (if-let ((location (org-fc-review-data-location)))
+      (org-with-point-at
+          (goto-char (car (org-fc-review-data-location)))
+        (let ((review-data (org-fc-review-data-get)))
+          (when (> (length review-data) 1)
+            (save-excursion
+              (let ((line-index (length review-data)))
+                (while (progn (org-table-goto-line line-index)
+                              (cl-incf line-index -1)
+                              (org-table-insert-hline)
+                              (not (= 1 (1- (org-table-current-line)))))))))))))
+
+(defun org-fc-rename-position-cloze ()
+  (interactive)
+  (save-excursion
+    (goto-char (car (org-fc-review-data-location)))
+    (when-let ((review-data (org-fc-review-data-get)))
+      (when (> (length review-data) 1)
+        (save-excursion
+          (let ((line-index (1+ (length review-data))))
+            (while (progn (org-table-goto-line line-index)
+                          (cl-incf line-index -1)
+                          (org-table-get-field 1 "0")
+                          (not (= 1 (1- (org-table-current-line))))))
+            (org-table-align)))))))
+
 ;;; Footer
 
 (provide 'org-fc-compat)
