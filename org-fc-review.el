@@ -379,9 +379,17 @@ END is the start of the line with :END: on it."
 
 (defun org-fc-review-data-get ()
   "Get a cards review data as a Lisp object."
-  (if-let ((position (org-fc-review-data-position)))
-      (org-with-point-at (car position)
-        (cddr (org-table-to-lisp)))))
+  (when-let* ((position (org-fc-review-data-position))
+              (parsed-table (org-with-point-at (car position)
+                              (cddr (org-table-to-lisp)))))
+    (when (memq 'hline parsed-table)
+      (setq parsed-table (mapcar #'car (-split-on 'hline parsed-table))))
+    
+    (mapcar (lambda (pos)
+              (mapcar (lambda (datum)
+                        (substring-no-properties datum))
+                      pos))
+            parsed-table)))
 
 (defun org-fc-review-data-set (data)
   "Set the cards review data to DATA."
@@ -394,7 +402,7 @@ END is the start of the line with :END: on it."
       (dolist (datum data)
         (insert
          "| "
-         (mapconcat (lambda (x) (format "%s" x)) datum " | ")
+         (mapconcat #'identity datum " | ")
          " |\n"))
       (org-table-align))))
 
@@ -417,6 +425,17 @@ removed."
          (assoc pos old-data #'string=)
          (org-fc-review-data-default pos)))
       positions))))
+
+;; TODO: Simplify these nested mapcars.
+(defun org-fc-review-history-get ()
+  "Get a cards review data as a Lisp object."
+  (when-let* ((position (org-fc-review-data-position)))
+    (org-with-point-at (car position)
+      (mapcar (lambda (pos)
+                (mapcar (lambda (datum)
+                          (mapcar #'substring-no-properties datum))
+                        pos))
+              (-split-on 'hline (cddr (org-table-to-lisp)))))))
 
 ;;; Sessions
 
