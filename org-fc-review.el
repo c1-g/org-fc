@@ -347,7 +347,7 @@ Pauses the review, unnarrows the buffer and activates
 ;;; Managing Review Data
 
 ;; Based on `org-log-beginning'
-(defun org-fc-review-data-position (&optional create)
+(defun org-fc-review-data-location (&optional create)
   "Return (BEGINNING . END) points of the review data drawer.
 When optional argument CREATE is non-nil, the function creates a
 drawer, if necessary.  Returned position ignores narrowing.
@@ -380,8 +380,8 @@ END is the start of the line with :END: on it."
 
 (defun org-fc-review-data-get ()
   "Get a cards review data as a Lisp object."
-  (when-let* ((position (org-fc-review-data-position))
-              (parsed-table (org-with-point-at (car position)
+  (when-let* ((location (org-fc-review-data-location))
+              (parsed-table (org-with-point-at (car location)
                               (cddr (org-table-to-lisp)))))
     (when (memq 'hline parsed-table)
       (setq parsed-table (mapcar #'car (-split-on 'hline parsed-table))))
@@ -395,9 +395,9 @@ END is the start of the line with :END: on it."
 (defun org-fc-review-data-set (data)
   "Set the cards review data to DATA."
   (save-excursion
-    (let ((position (org-fc-review-data-position 'create)))
-      (kill-region (car position) (cdr position))
-      (goto-char (car position))
+    (let ((location (org-fc-review-data-location 'create)))
+      (kill-region (car location) (cdr location))
+      (goto-char (car location))
       (insert "| position | ease | box | interval | due |\n")
       (insert "|-|-|-|-|-|\n")
       (dolist (datum data)
@@ -430,8 +430,8 @@ removed."
 ;; TODO: Simplify these nested mapcars.
 (defun org-fc-review-history-get ()
   "Get a cards review data as a Lisp object."
-  (when-let* ((position (org-fc-review-data-position)))
-    (org-with-point-at (car position)
+  (when-let* ((location (org-fc-review-data-location)))
+    (org-with-point-at (car location)
       (mapcar (lambda (pos)
                 (mapcar (lambda (datum)
                           (mapcar #'substring-no-properties datum))
