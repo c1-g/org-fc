@@ -95,6 +95,35 @@
   'org-fc-audio-set-after
   'org-fc-audio-set-after-setup "0.1.0")
 
+;; TODO: doc
+(defun org-fc-put-hline-review-data ()
+  (interactive)
+  (if-let ((position (org-fc-review-data-position)))
+      (org-with-point-at
+          (goto-char (car (org-fc-review-data-position)))
+        (let ((review-data (org-fc-review-data-get)))
+          (when (> (length review-data) 1)
+            (save-excursion
+              (let ((line-index (length review-data)))
+                (while (progn (org-table-goto-line line-index)
+                              (cl-incf line-index -1)
+                              (org-table-insert-hline)
+                              (not (= 1 (1- (org-table-current-line)))))))))))))
+
+(defun org-fc-rename-position-cloze ()
+  (interactive)
+  (save-excursion
+    (goto-char (car (org-fc-review-data-position)))
+    (when-let ((review-data (org-fc-review-data-get)))
+      (when (> (length review-data) 1)
+        (save-excursion
+          (let ((line-index (1+ (length review-data))))
+            (while (progn (org-table-goto-line line-index)
+                          (cl-incf line-index -1)
+                          (org-table-get-field 1 "0")
+                          (not (= 1 (1- (org-table-current-line))))))
+            (org-table-align)))))))
+
 ;;; Footer
 
 (provide 'org-fc-compat)
