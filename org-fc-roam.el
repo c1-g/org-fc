@@ -163,15 +163,26 @@ GET-DB is a function that returns connection to database."
                                    #'string-equal))
                            (file-relative-name
                             file org-roam-directory))))
-               (tags org-file-tags)
-               (properties (org-entry-properties))
-               (cloze-p (string= (org-entry-get nil org-fc-type-property) "cloze")))
-          
-          (when (member org-fc-flashcard-tag org-file-tags)
+               (review-history (org-review-history-get)))
+
+          (when (and (member org-fc-flashcard-tag org-file-tags)
+                     review-history)
             (org-roam-db-query
              [:insert :into review-history
                       :values $v1]
-             (vector id (or title "") 0 "" "1:0" (org-fc-timestamp-in 0) 0 0 2.5 ""))))))))
+             (seq-map (lambda (pos)
+                        (mapcar (lambda (row)
+                                  (cl-destructuring-bind (id title pos ease box intrv due)
+                                      row
+                                    (vector id
+                                            (or title "")
+                                            pos
+                                            (string-to-number ease)
+                                            (string-to-number box)
+                                            (string-to-number intrv)
+                                            due)))
+                                pos))
+                      review-history))))))))
 
 (defun org-fc-roam-db-insert-outline-note ()
   "Insert outline level note into `org-fc-roam' database."
