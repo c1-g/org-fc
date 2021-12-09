@@ -114,12 +114,16 @@ GET-DB is a function that returns connection to database."
            (advice-add
             'org-roam-db-insert-file-node
             :after
-            #'org-fc-roam-db-insert-file-note))
+            #'org-fc-roam-db-insert-file-note)
+           (advice-add
+            'org-roam-db-insert-node-data
+            :after
+            #'org-fc-roam-db-insert-outline-note))
           (t
            (setq org-fc-roam-db--initalized nil)
            ;; (advice-remove 'org-roam-db-map-links #'org-fc-roam-db-insert-links)
-           ;; (advice-remove
-           ;;  'org-roam-db-insert-node-data #'org-fc-roam-db-insert-outline-note)
+           (advice-remove
+            'org-roam-db-insert-node-data #'org-fc-roam-db-insert-outline-note)
            (advice-remove
             'org-roam-db-insert-file-node #'org-fc-roam-db-insert-file-note)
            (advice-remove 'org-roam-db #'org-fc-roam-db--init)
@@ -162,15 +166,26 @@ GET-DB is a function that returns connection to database."
                                    #'string-equal))
                            (file-relative-name
                             file org-roam-directory))))
-               (tags org-file-tags)
-               (properties (org-entry-properties))
-               (cloze-p (string= (org-entry-get nil org-fc-type-property) "cloze")))
-          
-          (when (member org-fc-flashcard-tag org-file-tags)
+               (review-data (org-fc-review-data-get)))
+
+          (when (and (member org-fc-flashcard-tag org-file-tags)
+                     review-data)
             (org-roam-db-query
              [:insert :into review-history
                       :values $v1]
-             (vector id (or title "") 0 "" "1:0" (org-fc-timestamp-in 0) 0 0 2.5 ""))))))))
+             (seq-map (lambda (pos)
+                        (mapcar (lambda (row)
+                                  (cl-destructuring-bind (pos ease box intrv due)
+                                      row
+                                    (vector id
+                                            (or title "")
+                                            pos
+                                            (string-to-number ease)
+                                            (string-to-number box)
+                                            (string-to-number intrv)
+                                            due)))
+                                pos))
+                      review-data))))))))
 
 (defun org-fc-roam-db-insert-outline-note ()
   "Insert outline level note into `org-fc-roam' database."
@@ -189,25 +204,26 @@ GET-DB is a function that returns connection to database."
                         (1+ (- (point) (line-beginning-position))))
                        (cl-return-from
                            org-roam-db-insert-node-data))))
-           (properties (org-entry-properties))
            (title (org-link-display-format title))
-           (tags (org-get-tags)))
-      (org-roam-db-query!
-       (lambda (err)
-         (lwarn 'org-roam :warning "%s for %s (%s) in %s"
-                (error-message-string err)
-                title id file))
-       [:insert :into notes
-        :values $v1]
-       (vector id
-               file
-               level
-               title
-               properties
-               aliases
-               tags
-               nil
-               nil)))))
+           (review-data (org-fc-review-data-get)))
+      (when (and (member org-fc-flashcard-tag (org-get-tags))
+                 review-data)
+        (org-roam-db-query
+         [:insert :into review-history
+                  :values $v1]
+         (seq-map (lambda (pos)
+                    (mapcar (lambda (row)
+                              (cl-destructuring-bind (pos ease box intrv due)
+                                  row
+                                (vector id
+                                        (or title "")
+                                        pos
+                                        (string-to-number ease)
+                                        (string-to-number box)
+                                        (string-to-number intrv)
+                                        due)))
+                            pos))
+                  review-data))))))
 
 (provide 'org-fc-roam)
 ;;; org-fc-roam.el ends here
