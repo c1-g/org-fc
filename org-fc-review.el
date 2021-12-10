@@ -466,6 +466,39 @@ removed."
                                      (lambda (car-of-alist key)
                                        (string= (car car-of-alist) key)))))))
 
+(defun org-fc-review-history-set (data n)
+  "Set the cards review data to DATA."
+  (save-excursion
+    (let ((location (org-fc-review-data-location 'create))
+          (history (org-fc-review-history-get (car data)))
+          (position (car data))
+          (type (org-entry-get nil org-fc-type-property)))
+      
+      (goto-char (cdr location))
+      (cond ((eq (car location) (cdr location))
+             (insert "| position | ease | box | interval | due |\n")
+             (insert "|-|-|-|-|-|\n"))
+            
+            ((and history (assoc (number-to-string n) history #'string=))
+             (re-search-backward (regexp-quote position) (car location) t)
+             (re-search-forward (concat org-table-line-regexp "[ \t]*" (number-to-string n))
+                                (save-excursion (re-search-forward org-table-hline-regexp nil t))
+                                t)
+             (org-table-get-field 1 (number-to-string (1+ n))))
+
+            (t (re-search-backward (regexp-quote position) (car location) t)))
+      
+      (beginning-of-line)
+      (next-line)
+      (insert "| " (mapconcat (lambda (datum)
+                                (if (stringp datum)
+                                    datum
+                                  (format "%s" datum)))
+                              (and (setcar data n) data)
+                              " | ")
+              " |\n")
+      (org-table-align))))
+
 ;;; Sessions
 
 (defclass org-fc-review-session ()

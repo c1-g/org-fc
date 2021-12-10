@@ -133,6 +133,23 @@ the review data e.g. the \"front\" or the \"back\" of a card etc.")
                           (not (= 1 (1- (org-table-current-line))))))
             (org-table-align)))))))
 
+(defun org-fc-import-history-from-file ()
+  (interactive)
+  (when-let ((id (org-id-get))
+             (positions (mapcar #'car (org-fc-review-data-get))))
+    (mapc (lambda (pos)
+            (let ((history (org-fc-awk-history-for-id id pos)))
+              (dotimes (i (length history))
+                (let ((plist (nth i history)))
+                  (org-fc-review-history-set
+                   (list (plist-get plist :position)
+                         (plist-get plist :ease)
+                         (plist-get plist :box)
+                         (plist-get plist :interval)
+                         (plist-get plist :date))
+                   (1+ i))))))
+          positions)))
+
 ;;; Footer
 
 (provide 'org-fc-compat)
