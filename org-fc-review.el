@@ -280,12 +280,12 @@ rating the card."
   (org-fc-with-point-at-entry
    ;; If the card is marked as a demo card, don't log its reviews and
    ;; don't update its review data
-   (unless (member org-fc-demo-tag (org-fc--get-tags))
-     (let* ((history-of-card (org-fc-review-history-get))
-            (history-of-position (assoc position history-of-card
-                                        (lambda (car-of-alist key)
-                                          (string= (car car-of-alist) key))))
-            (current (car history-of-position)))
+   (unless (member org-fc-demo-tag (org-get-tags))
+     (let* ((history (org-fc-review-history-get))
+            (position (assoc position history-of-card
+                             (lambda (car-of-alist key)
+                               (string= (car car-of-alist) key))))
+            (current (car position)))
        (unless current
          (error "No review data found for this position"))
        (let ((ease (string-to-number (cl-second current)))
@@ -407,39 +407,41 @@ END is the start of the line with :END: on it."
 
 (defun org-fc-review-data-set (data)
   "Set the cards review data to DATA."
-  (save-excursion
-    (let ((location (org-fc-review-data-location 'create))
-          (history (org-fc-review-history-get (car data)))
-          (position (car data))
-          (type (org-entry-get nil org-fc-type-property))
-          new-row)
-      (goto-char (cdr location))
-      (cond ((eq (car location) (cdr location))
-             (insert "| position | ease | box | interval | due | rating |\n")
-             (insert "|-|-|-|-|-|-|\n"))
-            
-            ((and history (not (string= type "cloze")))
-             (re-search-backward (regexp-quote position) (car location) t)
-             (org-table-get-field 1 (number-to-string (length history))))
-            ((and history (string= type "cloze"))
-             (goto-char (car location))
-             (re-search-forward org-table-hline-regexp
-                                 (cdr location) t
-                                 (string-to-number position))
-             (org-table-next-row)
-             (org-table-get-field 1 (number-to-string (length history)))
-             (setcar data "0"))
-            (t (insert "|-|-|-|-|-|-|\n")))
-      
-      (beginning-of-line)
-      (insert "| " (mapconcat (lambda (datum)
-                                (if (stringp datum)
-                                    datum
-                                  (format "%s" datum)))
-                              data
-                              " | ")
-              " |\n")
-      (org-table-align))))
+  (if (listp (car data))
+      (mapcar #'org-fc-review-data-set data)
+    (save-excursion
+      (let ((location (org-fc-review-data-location 'create))
+            (history (org-fc-review-history-get (car data)))
+            (position (car data))
+            (type (org-entry-get nil org-fc-type-property))
+            new-row)
+        (goto-char (cdr location))
+        (cond ((eq (car location) (cdr location))
+               (insert "| position | ease | box | interval | due |\n")
+               (insert "|-|-|-|-|-|\n"))
+
+              ((and history (not (string= type "cloze")))
+               (re-search-backward (regexp-quote position) (car location) t)
+               (org-table-get-field 1 (number-to-string (length history))))
+              ((and history (string= type "cloze"))
+               (goto-char (car location))
+               (re-search-forward org-table-hline-regexp
+                                  (cdr location) t
+                                  (string-to-number position))
+               (org-table-next-row)
+               (org-table-get-field 1 (number-to-string (length history)))
+               (setcar data "0"))
+              (t (insert "|-|-|-|-|-|\n")))
+
+        (beginning-of-line)
+        (insert "| " (mapconcat (lambda (datum)
+                                  (if (stringp datum)
+                                      datum
+                                    (format "%s" datum)))
+                                data
+                                " | ")
+                " |\n")
+        (org-table-align)))))
 
 (defun org-fc-review-data-default (position)
   "Default review data for position POSITION."
