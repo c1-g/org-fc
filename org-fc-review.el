@@ -384,14 +384,23 @@ END is the start of the line with :END: on it."
   "Get a cards review data as a Lisp object."
   (when-let* ((location (org-fc-review-data-location))
               (parsed-table (org-with-point-at (car location)
-                              (cddr (org-table-to-lisp)))))
+                              (cddr (org-table-to-lisp))))
+              (type (org-entry-get nil org-fc-type-property)))
     (when (memq 'hline parsed-table)
       (setq parsed-table (mapcar #'car (-split-on 'hline parsed-table))))
+
+    (when (string= type "cloze")
+      (setq parsed-table
+            (seq-map-indexed
+             (lambda (data i)
+               (setcar data (number-to-string i))
+               data)
+             parsed-table)))
     
-    (mapcar (lambda (pos)
+    (mapcar (lambda (data)
               (mapcar (lambda (datum)
                         (substring-no-properties datum))
-                      pos))
+                       data))
             parsed-table)))
 
 (defun org-fc-review-data-set (data)
@@ -411,8 +420,9 @@ END is the start of the line with :END: on it."
              (re-search-backward (regexp-quote position) (car location) t)
              (org-table-get-field 1 (number-to-string (length history))))
             ((and history (string= type "cloze"))
-             (re-search-backward org-table-hline-regexp
-                                 (car location) t
+             (goto-char (car location))
+             (re-search-forward org-table-hline-regexp
+                                 (cdr location) t
                                  (string-to-number position))
              (org-table-next-row)
              (org-table-get-field 1 (number-to-string (length history)))
@@ -484,8 +494,14 @@ removed."
              (re-search-forward (concat org-table-line-regexp "[ \t]*" (number-to-string n))
                                 (save-excursion (re-search-forward org-table-hline-regexp nil t))
                                 t)
-             (org-table-get-field 1 (number-to-string (1+ n))))
+             (org-table-get-field 1 (number-to-string (+ 2 position))))
 
+            ((string= type "cloze")
+             (goto-char (car location))
+             (re-search-forward org-table-hline-regexp
+                                (cdr location) t
+                                (1+ (string-to-number position)))
+             (org-table-next-row))
             (t (re-search-backward (regexp-quote position) (car location) t)))
       
       (beginning-of-line)
