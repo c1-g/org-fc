@@ -405,39 +405,41 @@ END is the start of the line with :END: on it."
 
 (defun org-fc-review-data-set (data)
   "Set the cards review data to DATA."
-  (save-excursion
-    (let ((location (org-fc-review-data-location 'create))
-          (history (org-fc-review-history-get (car data)))
-          (position (car data))
-          (type (org-entry-get nil org-fc-type-property))
-          new-row)
-      (goto-char (cdr location))
-      (cond ((eq (car location) (cdr location))
-             (insert "| position | ease | box | interval | due |\n")
-             (insert "|-|-|-|-|-|\n"))
-            
-            ((and history (not (string= type "cloze")))
-             (re-search-backward (regexp-quote position) (car location) t)
-             (org-table-get-field 1 (number-to-string (length history))))
-            ((and history (string= type "cloze"))
-             (goto-char (car location))
-             (re-search-forward org-table-hline-regexp
-                                 (cdr location) t
-                                 (string-to-number position))
-             (org-table-next-row)
-             (org-table-get-field 1 (number-to-string (length history)))
-             (setcar data "0"))
-            (t (insert "|-|-|-|-|-|\n")))
-      
-      (beginning-of-line)
-      (insert "| " (mapconcat (lambda (datum)
-                                (if (stringp datum)
-                                    datum
-                                  (format "%s" datum)))
-                              data
-                              " | ")
-              " |\n")
-      (org-table-align))))
+  (if (listp (car data))
+      (mapcar #'org-fc-review-data-set data)
+    (save-excursion
+      (let ((location (org-fc-review-data-location 'create))
+            (history (org-fc-review-history-get (car data)))
+            (position (car data))
+            (type (org-entry-get nil org-fc-type-property))
+            new-row)
+        (goto-char (cdr location))
+        (cond ((eq (car location) (cdr location))
+               (insert "| position | ease | box | interval | due |\n")
+               (insert "|-|-|-|-|-|\n"))
+
+              ((and history (not (string= type "cloze")))
+               (re-search-backward (regexp-quote position) (car location) t)
+               (org-table-get-field 1 (number-to-string (length history))))
+              ((and history (string= type "cloze"))
+               (goto-char (car location))
+               (re-search-forward org-table-hline-regexp
+                                  (cdr location) t
+                                  (string-to-number position))
+               (org-table-next-row)
+               (org-table-get-field 1 (number-to-string (length history)))
+               (setcar data "0"))
+              (t (insert "|-|-|-|-|-|\n")))
+
+        (beginning-of-line)
+        (insert "| " (mapconcat (lambda (datum)
+                                  (if (stringp datum)
+                                      datum
+                                    (format "%s" datum)))
+                                data
+                                " | ")
+                " |\n")
+        (org-table-align)))))
 
 (defun org-fc-review-data-default (position)
   "Default review data for position POSITION."
