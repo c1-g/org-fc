@@ -104,6 +104,7 @@ which the review data property drawer resides i.e. its location,
 naming it \"position\" might cause confusion with the \"position\" in
 the review data e.g. the \"front\" or the \"back\" of a card etc.")
 
+
 ;; TODO: doc
 (defun org-fc-put-hline-review-data ()
   (interactive)
@@ -121,17 +122,18 @@ the review data e.g. the \"front\" or the \"back\" of a card etc.")
 
 (defun org-fc-rename-position-cloze ()
   (interactive)
-  (save-excursion
-    (goto-char (car (org-fc-review-data-location)))
-    (when-let ((review-data (org-fc-review-data-get)))
-      (when (> (length review-data) 1)
-        (save-excursion
-          (let ((line-index (1+ (length review-data))))
-            (while (progn (org-table-goto-line line-index)
-                          (cl-incf line-index -1)
-                          (org-table-get-field 1 "0")
-                          (not (= 1 (1- (org-table-current-line))))))
-            (org-table-align)))))))
+  (when (string= (org-entry-get nil org-fc-type-property) "cloze")
+    (save-excursion
+      (goto-char (car (org-fc-review-data-location)))
+      (when-let ((review-data (org-fc-review-data-get)))
+        (when (> (length review-data) 1)
+          (save-excursion
+            (let ((line-index (1+ (length review-data))))
+              (while (progn (org-table-goto-line line-index)
+                            (cl-incf line-index -1)
+                            (org-table-get-field 1 "0")
+                            (not (= 1 (1- (org-table-current-line))))))
+              (org-table-align))))))))
 
 (defun org-fc-import-history-from-file ()
   (interactive)
@@ -149,6 +151,27 @@ the review data e.g. the \"front\" or the \"back\" of a card etc.")
                          (plist-get plist :date))
                    (1+ i))))))
           positions)))
+
+(defun org-fc-migrate-wizard ()
+  (interactive)
+  (let* ((index (org-fc-index '(:paths all)))
+         (paths (cl-remove-duplicates
+                 (mapcar (lambda (card) (plist-get card :path))
+                         index)))
+         (progress-reporter
+          (make-progress-reporter "Migrating file..." 0 (length paths))))
+    (mapc (lambda (path)
+            (with-current-buffer (find-file-noselect path)
+              (org-fc-map-cards #'org-fc-migrate)
+              (progress-reporter-update progress-reporter)))
+          paths)
+    (progress-reporter-done progress-reporter)))
+
+(defun org-fc-migrate ()
+  ""
+  (org-fc-rename-position-cloze)
+  (org-fc-put-hline-review-data)
+  (org-fc-import-history-from-file))
 
 ;;; Footer
 
