@@ -280,8 +280,11 @@ rating the card."
    ;; If the card is marked as a demo card, don't log its reviews and
    ;; don't update its review data
    (unless (member org-fc-demo-tag (org-get-tags))
-     (let* ((data (org-fc-review-data-get))
-            (current (assoc position data #'string=)))
+     (let* ((history (org-fc-review-history-get))
+            (position (assoc position history-of-card
+                             (lambda (car-of-alist key)
+                               (string= (car car-of-alist) key))))
+            (current (car position)))
        (unless current
          (error "No review data found for this position"))
        (let ((ease (string-to-number (cl-second current)))
@@ -307,7 +310,7 @@ rating the card."
                   (number-to-string next-box)
                   (format "%.2f" next-interval)
                   (org-fc-timestamp-in next-interval)))
-           (org-fc-review-data-set data)))))))
+           (org-fc-review-data-set current)))))))
 
 (defun org-fc-review-reset ()
   "Reset the buffer to its state before the review."
@@ -394,16 +397,36 @@ END is the start of the line with :END: on it."
 (defun org-fc-review-data-set (data)
   "Set the cards review data to DATA."
   (save-excursion
-    (let ((location (org-fc-review-data-location 'create)))
-      (kill-region (car location) (cdr location))
-      (goto-char (car location))
-      (insert "| position | ease | box | interval | due |\n")
-      (insert "|-|-|-|-|-|\n")
-      (dolist (datum data)
-        (insert
-         "| "
-         (mapconcat #'identity datum " | ")
-         " |\n"))
+    (let ((location (org-fc-review-data-location 'create))
+          (history (org-fc-review-history-get (car data)))
+          (position (car data))
+          (type (org-entry-get nil org-fc-type-property))
+          new-row)
+      (goto-char (cdr location))
+      (cond ((eq (car location) (cdr location))
+             (insert "| position | ease | box | interval | due |\n")
+             (insert "|-|-|-|-|-|\n"))
+            
+            ((and history (not (string= type "cloze")))
+             (re-search-backward (regexp-quote position) (car location) t)
+             (org-table-get-field 1 (number-to-string (length history))))
+            ((and history (string= type "cloze"))
+             (re-search-backward org-table-hline-regexp
+                                 (car location) t
+                                 (string-to-number position))
+             (org-table-next-row)
+             (org-table-get-field 1 (number-to-string (length history)))
+             (setcar data "0"))
+            (t (insert "|-|-|-|-|-|\n")))
+      
+      (beginning-of-line)
+      (insert "| " (mapconcat (lambda (datum)
+                                (if (stringp datum)
+                                    datum
+                                  (format "%s" datum)))
+                              data
+                              " | ")
+              " |\n")
       (org-table-align))))
 
 (defun org-fc-review-data-default (position)
@@ -427,15 +450,21 @@ removed."
       positions))))
 
 ;; TODO: Simplify these nested mapcars.
-(defun org-fc-review-history-get ()
+(defun org-fc-review-history-get (&optional position)
   "Get a cards review data as a Lisp object."
-  (when-let* ((location (org-fc-review-data-location)))
-    (org-with-point-at (car location)
-      (mapcar (lambda (pos)
-                (mapcar (lambda (datum)
-                          (mapcar #'substring-no-properties datum))
-                        pos))
-              (-split-on 'hline (cddr (org-table-to-lisp)))))))
+  (when-let* ((location (org-fc-review-data-location))
+              (history (org-with-point-at (car location)
+                         (mapcar (lambda (pos)
+                                   (mapcar (lambda (datum)
+                                             (mapcar #'substring-no-properties datum))
+                                           pos))
+                                 (-split-on 'hline (cddr (org-table-to-lisp)))))))
+    (cond ((null position) history)
+          ((string= (org-entry-get nil org-fc-type-property) "cloze")
+           (nth (string-to-number position) history))
+          ((stringp position) (assoc position history
+                                     (lambda (car-of-alist key)
+                                       (string= (car car-of-alist) key)))))))
 
 ;;; Sessions
 
