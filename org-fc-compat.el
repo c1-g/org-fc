@@ -150,6 +150,15 @@ the review data e.g. the \"front\" or the \"back\" of a card etc.")
                    (1+ i))))))
           positions)))
 
+(defun org-fc-add-rating-to-drawer ()
+  (interactive)
+  (save-excursion
+    (goto-char (car (org-fc-review-data-location)))
+    (end-of-line)
+    (org-table-insert-column)
+    (insert "rating")
+    (org-table-align)))
+
 ;;; Footer
 
 (provide 'org-fc-compat)
