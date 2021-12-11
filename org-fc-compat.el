@@ -164,6 +164,7 @@ the review data e.g. the \"front\" or the \"back\" of a card etc.")
 (defun org-fc-migrate ()
   ""
   (org-with-wide-buffer
+   (org-show-all)
    (org-fc-rename-position-cloze)
    (org-fc-put-hline-review-data)
    (org-fc-import-history-from-file)))
