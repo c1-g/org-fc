@@ -147,6 +147,29 @@ to this,
                         (not (= 1 (1- (org-table-current-line)))))))))))
 
 (defun org-fc-rename-cloze-position-to-zero ()
+  "Replace every position of cloze flashcard with \"0\"
+For example, a review data draw like this,
+
+:REVIEW_DATA:
+| position | ease | box | interval | due                  |
+|----------+------+-----+----------+----------------------|
+|        0 | 2.50 |   6 |    80.76 | 2000-01-01T00:00:00Z |
+|        1 | 2.50 |   6 |    72.76 | 2000-01-01T00:00:00Z |
+|        2 | 2.50 |   6 |    91.28 | 2000-01-01T00:00:00Z |
+|        3 | 2.50 |   6 |    95.75 | 2000-01-01T00:00:00Z |
+:END:
+
+will turn to this,
+
+:REVIEW_DATA:
+| position | ease | box | interval | due                  |
+|----------+------+-----+----------+----------------------|
+|        0 | 2.50 |   6 |    80.76 | 2000-01-01T00:00:00Z |
+|        0 | 2.50 |   6 |    72.76 | 2000-01-01T00:00:00Z |
+|        0 | 2.50 |   6 |    91.28 | 2000-01-01T00:00:00Z |
+|        0 | 2.50 |   6 |    95.75 | 2000-01-01T00:00:00Z |
+:END:
+"
   (interactive)
   (when-let ((cloze-p (org-fc-entry-cloze-p))
              (location (org-fc-review-data-location)))
