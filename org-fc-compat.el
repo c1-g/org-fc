@@ -210,15 +210,11 @@ will turn to this,
                        index))))
     (dolist (id ids)
       (org-id-goto id)
-      (org-fc-migrate))))
-
-(defun org-fc-migrate ()
-  ""
-  (org-with-wide-buffer
-   (org-show-all)
-   (org-fc-rename-cloze-position-to-zero)
-   (org-fc-insert-hline-review-data)
-   (org-fc-import-history-from-file)))
+      (org-with-wide-buffer
+       (org-show-all)
+       (org-fc-rename-cloze-position-to-zero)
+       (org-fc-insert-hline-review-data)
+       (org-fc-import-history-from-file)))))
 
 ;;; Footer
 
