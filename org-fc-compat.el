@@ -106,7 +106,7 @@ the review data e.g. the \"front\" or the \"back\" of a card etc.")
 
 
 ;; TODO: doc
-(defun org-fc-put-hline-review-data ()
+(defun org-fc-insert-hline-review-data ()
   "Insert hline under every position in review data drawer except the last one.
 
 
@@ -194,7 +194,7 @@ to this,
   (org-with-wide-buffer
    (org-show-all)
    (org-fc-rename-position-cloze)
-   (org-fc-put-hline-review-data)
+   (org-fc-insert-hline-review-data)
    (org-fc-import-history-from-file)))
 
 ;;; Footer
