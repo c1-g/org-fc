@@ -106,52 +106,101 @@ the review data e.g. the \"front\" or the \"back\" of a card etc.")
 
 
 ;; TODO: doc
-(defun org-fc-put-hline-review-data ()
-  (interactive)
-  (if-let ((location (org-fc-review-data-location)))
-      (org-with-point-at
-          (goto-char (car (org-fc-review-data-location)))
-        (let ((review-data (org-fc-review-data-get)))
-          (when (> (length review-data) 1)
-            (save-excursion
-              (let ((line-index (length review-data)))
-                (while (progn (org-table-goto-line line-index)
-                              (cl-incf line-index -1)
-                              (org-table-insert-hline)
-                              (not (= 1 (1- (org-table-current-line)))))))))))))
+(defun org-fc-insert-hline-review-data ()
+  "Insert hline under every position in review data drawer except the last one.
 
-(defun org-fc-rename-position-cloze ()
+
+For example, the function will turn a review data drawer like this,
+
+:REVIEW_DATA:
+| position | ease | box | interval | due                  |
+|----------+------+-----+----------+----------------------|
+|        0 | 2.50 |   6 |    80.76 | 2000-01-01T00:00:00Z |
+|        1 | 2.50 |   6 |    72.76 | 2000-01-01T00:00:00Z |
+|        2 | 2.50 |   6 |    91.28 | 2000-01-01T00:00:00Z |
+|        3 | 2.50 |   6 |    95.75 | 2000-01-01T00:00:00Z |
+:END:
+
+to this,
+
+:REVIEW_DATA:
+| position | ease | box | interval | due                  |
+|----------+------+-----+----------+----------------------|
+|        0 | 2.50 |   6 |    80.76 | 2000-01-01T00:00:00Z |
+|----------+------+-----+----------+----------------------|
+|        1 | 2.50 |   6 |    72.76 | 2000-01-01T00:00:00Z |
+|----------+------+-----+----------+----------------------|
+|        2 | 2.50 |   6 |    91.28 | 2000-01-01T00:00:00Z |
+|----------+------+-----+----------+----------------------|
+|        3 | 2.50 |   6 |    95.75 | 2000-01-01T00:00:00Z |
+:END:
+"
   (interactive)
-  (when (string= (org-entry-get nil org-fc-type-property) "cloze")
-    (save-excursion
-      (goto-char (car (org-fc-review-data-location)))
+  (when-let ((location (org-fc-review-data-location)))
+    (org-with-point-at (car location)
+      (let* ((review-data (org-fc-review-data-get))
+             (line-index (length review-data)))
+        (when (> line-index 1)
+          (while (progn (org-table-goto-line line-index)
+                        (cl-incf line-index -1)
+                        (org-table-insert-hline)
+                        (not (= 1 (1- (org-table-current-line)))))))))))
+
+(defun org-fc-rename-cloze-position-to-zero ()
+  "Replace every position of cloze flashcard with \"0\"
+For example, a review data draw like this,
+
+:REVIEW_DATA:
+| position | ease | box | interval | due                  |
+|----------+------+-----+----------+----------------------|
+|        0 | 2.50 |   6 |    80.76 | 2000-01-01T00:00:00Z |
+|        1 | 2.50 |   6 |    72.76 | 2000-01-01T00:00:00Z |
+|        2 | 2.50 |   6 |    91.28 | 2000-01-01T00:00:00Z |
+|        3 | 2.50 |   6 |    95.75 | 2000-01-01T00:00:00Z |
+:END:
+
+will turn to this,
+
+:REVIEW_DATA:
+| position | ease | box | interval | due                  |
+|----------+------+-----+----------+----------------------|
+|        0 | 2.50 |   6 |    80.76 | 2000-01-01T00:00:00Z |
+|        0 | 2.50 |   6 |    72.76 | 2000-01-01T00:00:00Z |
+|        0 | 2.50 |   6 |    91.28 | 2000-01-01T00:00:00Z |
+|        0 | 2.50 |   6 |    95.75 | 2000-01-01T00:00:00Z |
+:END:
+"
+  (interactive)
+  (when-let ((cloze-p (org-fc-entry-cloze-p))
+             (location (org-fc-review-data-location)))
+    (org-with-point-at (car location)
       (when-let ((review-data (org-fc-review-data-get)))
-        (when (> (length review-data) 1)
-          (save-excursion
-            (let ((line-index (1+ (length review-data))))
-              (while (progn (org-table-goto-line line-index)
-                            (cl-incf line-index -1)
-                            (org-table-get-field 1 "0")
-                            (not (= 1 (1- (org-table-current-line))))))
-              (org-table-align))))))))
+        (let* ((review-data (org-fc-review-data-get))
+               (line-index (1+ (length review-data))))
+          (while (progn (org-table-goto-line line-index)
+                        (cl-incf line-index -1)
+                        (org-table-get-field 1 "0")
+                        (not (= 1 (1- (org-table-current-line))))))
+          (org-table-align))))))
+
 
 (defun org-fc-import-history-from-file ()
   (interactive)
   (when-let ((id (org-id-get))
              (positions (mapcar #'car (org-fc-review-data-get))))
-    (mapc (lambda (pos)
-            (let ((history (org-fc-awk-history-for-id id pos)))
-              (dotimes (i (length history))
-                (let ((plist (nth i history)))
-                  (org-fc-review-history-set
-                   (list (plist-get plist :position)
-                         (plist-get plist :ease)
-                         (plist-get plist :box)
-                         (plist-get plist :interval)
-                         (plist-get plist :date)
-                         (plist-get plist :rating))
-                   (1+ i))))))
-          positions)))
+    (dolist (pos positions)
+      (let ((history (org-fc-awk-history-for-id id pos)))
+        (seq-do-indexed
+         (lambda (history i)
+           (org-fc-review-history-set
+            (list (plist-get history :position)
+                  (plist-get history :ease)
+                  (plist-get history :box)
+                  (plist-get history :interval)
+                  (plist-get history :date)
+                  (plist-get history :rating))
+            (1+ i)))
+         history)))))
 
 (defun org-fc-add-rating-to-drawer ()
   (interactive)
@@ -165,19 +214,18 @@ the review data e.g. the \"front\" or the \"back\" of a card etc.")
 (defun org-fc-migrate-wizard ()
   (interactive)
   (let* ((index (org-fc-index '(:paths all)))
-         (ids (delete-dups (mapcar (lambda (plist) (plist-get plist :id)) index))))
-    (mapc (lambda (id)
-            (org-id-goto id)
-            (org-fc-migrate))
-          ids)))
-
-(defun org-fc-migrate ()
-  ""
-  (org-with-wide-buffer
-   (org-fc-rename-position-cloze)
-   (org-fc-add-rating-to-drawer)
-   (org-fc-put-hline-review-data)
-   (org-fc-import-history-from-file)))
+         (ids (delete-dups
+               (mapcar (lambda (plist)
+                         (plist-get plist :id))
+                       index))))
+    (dolist (id ids)
+      (org-id-goto id)
+      (org-with-wide-buffer
+       (org-show-all)
+       (org-fc-rename-cloze-position-to-zero)
+       (org-fc-add-rating-to-drawer)
+       (org-fc-insert-hline-review-data)
+       (org-fc-import-history-from-file)))))
 
 ;;; Footer
 

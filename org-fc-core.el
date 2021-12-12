@@ -284,6 +284,10 @@ If point is not inside a flashcard entry, an error is raised."
     (and (member org-fc-flashcard-tag tags)
          (member org-fc-suspended-tag tags))))
 
+(defun org-fc-entry-cloze-p ()
+  "Check if the current heading is a cloze flashcard."
+  (and (org-fc-entry-p) (string= (org-entry-get nil org-fc-type-property) "cloze")))
+
 (defun org-fc-part-of-entry-p ()
   "Check if the current heading belongs to a flashcard."
   (member org-fc-flashcard-tag (org-fc--get-tags)))
