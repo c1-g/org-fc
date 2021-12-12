@@ -146,7 +146,7 @@ to this,
                         (org-table-insert-hline)
                         (not (= 1 (1- (org-table-current-line)))))))))))
 
-(defun org-fc-rename-position-cloze ()
+(defun org-fc-rename-cloze-position-to-zero ()
   (interactive)
   (when-let ((cloze-p (org-fc-entry-cloze-p))
              (location (org-fc-review-data-location)))
@@ -193,7 +193,7 @@ to this,
   ""
   (org-with-wide-buffer
    (org-show-all)
-   (org-fc-rename-position-cloze)
+   (org-fc-rename-cloze-position-to-zero)
    (org-fc-insert-hline-review-data)
    (org-fc-import-history-from-file)))
 
