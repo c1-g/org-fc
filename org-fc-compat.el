@@ -194,12 +194,22 @@ will turn to this,
          (lambda (history i)
            (org-fc-review-history-set
             (list (plist-get history :position)
+                  (or (plist-get history :priority) "")
                   (plist-get history :ease)
                   (plist-get history :box)
                   (plist-get history :interval)
                   (plist-get history :date))
             (1+ i)))
          history)))))
+
+(defun org-fc-add-priority-to-drawer ()
+  (interactive)
+  (save-excursion
+    (goto-char (car (org-fc-review-data-location)))
+    (org-table-goto-column 2)
+    (org-table-insert-column)
+    (insert "priority")
+    (org-table-align)))
 
 (defun org-fc-migrate-wizard ()
   (interactive)
@@ -213,6 +223,7 @@ will turn to this,
       (org-with-wide-buffer
        (org-show-all)
        (org-fc-rename-cloze-position-to-zero)
+       (org-fc-add-priority-to-drawer)
        (org-fc-insert-hline-review-data)
        (org-fc-import-history-from-file)))))
 
