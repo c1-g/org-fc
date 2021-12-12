@@ -287,15 +287,17 @@ rating the card."
             (current (car position)))
        (unless current
          (error "No review data found for this position"))
-       (let ((ease (string-to-number (cl-second current)))
-             (box (string-to-number (cl-third current)))
-             (interval (string-to-number (cl-fourth current))))
+       (let ((priority (string-to-number (cl-second current)))
+             (ease (string-to-number (cl-third current)))
+             (box (string-to-number (cl-fourth current)))
+             (interval (string-to-number (cl-fifth current))))
          (org-fc-review-history-add
           (list
            (org-fc-timestamp-in 0)
            path
            id
            position
+           (format "%.3f" priority)
            (format "%.2f" ease)
            (format "%d" box)
            (format "%.2f" interval)
