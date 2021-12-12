@@ -107,6 +107,34 @@ the review data e.g. the \"front\" or the \"back\" of a card etc.")
 
 ;; TODO: doc
 (defun org-fc-put-hline-review-data ()
+  "Insert hline under every position in review data drawer except the last one.
+
+
+For example, the function will turn a review data drawer like this,
+
+:REVIEW_DATA:
+| position | ease | box | interval | due                  |
+|----------+------+-----+----------+----------------------|
+|        0 | 2.50 |   6 |    80.76 | 2000-01-01T00:00:00Z |
+|        1 | 2.50 |   6 |    72.76 | 2000-01-01T00:00:00Z |
+|        2 | 2.50 |   6 |    91.28 | 2000-01-01T00:00:00Z |
+|        3 | 2.50 |   6 |    95.75 | 2000-01-01T00:00:00Z |
+:END:
+
+to this,
+
+:REVIEW_DATA:
+| position | ease | box | interval | due                  |
+|----------+------+-----+----------+----------------------|
+|        0 | 2.50 |   6 |    80.76 | 2000-01-01T00:00:00Z |
+|----------+------+-----+----------+----------------------|
+|        1 | 2.50 |   6 |    72.76 | 2000-01-01T00:00:00Z |
+|----------+------+-----+----------+----------------------|
+|        2 | 2.50 |   6 |    91.28 | 2000-01-01T00:00:00Z |
+|----------+------+-----+----------+----------------------|
+|        3 | 2.50 |   6 |    95.75 | 2000-01-01T00:00:00Z |
+:END:
+"
   (interactive)
   (when-let ((location (org-fc-review-data-location)))
     (org-with-point-at (car location)
