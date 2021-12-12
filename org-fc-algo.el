@@ -67,5 +67,12 @@
 
              ,symbol))))))
 
+(org-fc-property org-fc-algorithm
+                 org-fc-algorithm
+                 "Spacing algorithm."
+                 :type 'const
+                 :group 'org-fc
+                 :property org-fc-algorithm-property)
+
 (provide 'org-fc-algo)
 ;;; org-fc-algo.el ends here
