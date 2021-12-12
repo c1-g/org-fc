@@ -413,8 +413,8 @@ END is the start of the line with :END: on it."
         
         (goto-char (cdr location))
         (cond ((eq (car location) (cdr location))
-               (insert "| position | ease | box | interval | due |\n")
-               (insert "|-|-|-|-|-|\n"))
+               (insert "| position | priority | ease | box | interval | due |\n")
+               (insert "|-|-|-|-|-|-|\n"))
 
               ((and history (not (org-fc-entry-cloze-p)))
                (re-search-backward (regexp-quote position) (car location) t)
@@ -427,7 +427,7 @@ END is the start of the line with :END: on it."
                (org-table-next-row)
                (org-table-get-field 1 (number-to-string (length history)))
                (setcar data "0"))
-              (t (insert "|-|-|-|-|-|\n")))
+              (t (insert "|-|-|-|-|-|-|\n")))
 
         (beginning-of-line)
         (insert "| " (mapconcat (lambda (datum)
@@ -485,8 +485,8 @@ removed."
       
       (goto-char (cdr location))
       (cond ((eq (car location) (cdr location))
-             (insert "| position | ease | box | interval | due |\n")
-             (insert "|-|-|-|-|-|\n"))
+             (insert "| position | prioriy | ease | box | interval | due |\n")
+             (insert "|-|-|-|-|-|-|\n"))
             
             ((and history (assoc (number-to-string n) history #'string=))
              (re-search-backward (regexp-quote position) (car location) t)
