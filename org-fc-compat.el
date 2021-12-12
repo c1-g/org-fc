@@ -122,7 +122,7 @@ the review data e.g. the \"front\" or the \"back\" of a card etc.")
 
 (defun org-fc-rename-position-cloze ()
   (interactive)
-  (when (string= (org-entry-get nil org-fc-type-property) "cloze")
+  (when (org-fc-entry-cloze-p)
     (save-excursion
       (goto-char (car (org-fc-review-data-location)))
       (when-let ((review-data (org-fc-review-data-get)))

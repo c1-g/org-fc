@@ -384,12 +384,11 @@ END is the start of the line with :END: on it."
   "Get a cards review data as a Lisp object."
   (when-let* ((location (org-fc-review-data-location))
               (parsed-table (org-with-point-at (car location)
-                              (cddr (org-table-to-lisp))))
-              (type (org-entry-get nil org-fc-type-property)))
+                              (cddr (org-table-to-lisp)))))
     (when (memq 'hline parsed-table)
       (setq parsed-table (mapcar #'car (-split-on 'hline parsed-table))))
 
-    (when (string= type "cloze")
+    (when (org-fc-entry-cloze-p)
       (setq parsed-table
             (seq-map-indexed
              (lambda (data i)
@@ -410,17 +409,17 @@ END is the start of the line with :END: on it."
     (save-excursion
       (let ((location (org-fc-review-data-location 'create))
             (history (org-fc-review-history-get (car data)))
-            (position (car data))
-            (type (org-entry-get nil org-fc-type-property)))
+            (position (car data)))
+        
         (goto-char (cdr location))
         (cond ((eq (car location) (cdr location))
                (insert "| position | ease | box | interval | due |\n")
                (insert "|-|-|-|-|-|\n"))
 
-              ((and history (not (string= type "cloze")))
+              ((and history (not (org-fc-entry-cloze-p)))
                (re-search-backward (regexp-quote position) (car location) t)
                (org-table-get-field 1 (number-to-string (length history))))
-              ((and history (string= type "cloze"))
+              ((and history (org-fc-entry-cloze-p))
                (goto-char (car location))
                (re-search-forward org-table-hline-regexp
                                   (cdr location) t
@@ -471,7 +470,7 @@ removed."
                                            pos))
                                  (-split-on 'hline (cddr (org-table-to-lisp)))))))
     (cond ((null position) history)
-          ((string= (org-entry-get nil org-fc-type-property) "cloze")
+          ((org-fc-entry-cloze-p)
            (nth (string-to-number position) history))
           ((stringp position) (assoc position history
                                      (lambda (car-of-alist key)
@@ -482,8 +481,7 @@ removed."
   (save-excursion
     (let ((location (org-fc-review-data-location 'create))
           (history (org-fc-review-history-get (car data)))
-          (position (car data))
-          (type (org-entry-get nil org-fc-type-property)))
+          (position (car data)))
       
       (goto-char (cdr location))
       (cond ((eq (car location) (cdr location))
@@ -497,7 +495,7 @@ removed."
                                 t)
              (org-table-get-field 1 (number-to-string (+ 2 position))))
 
-            ((string= type "cloze")
+            ((org-fc-entry-cloze-p)
              (goto-char (car location))
              (re-search-forward org-table-hline-regexp
                                 (cdr location) t
