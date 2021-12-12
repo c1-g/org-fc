@@ -120,18 +120,17 @@ the review data e.g. the \"front\" or the \"back\" of a card etc.")
 
 (defun org-fc-rename-position-cloze ()
   (interactive)
-  (when (org-fc-entry-cloze-p)
-    (save-excursion
-      (goto-char (car (org-fc-review-data-location)))
+  (when-let ((cloze-p (org-fc-entry-cloze-p))
+             (location (org-fc-review-data-location)))
+    (org-with-point-at (car location)
       (when-let ((review-data (org-fc-review-data-get)))
-        (when (> (length review-data) 1)
-          (save-excursion
-            (let ((line-index (1+ (length review-data))))
-              (while (progn (org-table-goto-line line-index)
-                            (cl-incf line-index -1)
-                            (org-table-get-field 1 "0")
-                            (not (= 1 (1- (org-table-current-line))))))
-              (org-table-align))))))))
+        (let* ((review-data (org-fc-review-data-get))
+               (line-index (1+ (length review-data))))
+          (while (progn (org-table-goto-line line-index)
+                        (cl-incf line-index -1)
+                        (org-table-get-field 1 "0")
+                        (not (= 1 (1- (org-table-current-line))))))
+          (org-table-align))))))
 
 
 (defun org-fc-import-history-from-file ()
