@@ -516,6 +516,28 @@ removed."
               " |\n")
       (org-table-align))))
 
+;;; Priority
+(defun org-fc-initial-priority (&optional as-string ease)
+  ""
+  (let ((priority (* 100 (/ (float (or ease (org-fc-algo-sm2-ease-initial)))
+                            (length (buffer-substring-no-properties
+                                     (save-excursion (org-fc-end-of-meta-data t)
+                                                     (point))
+                                     (point-max)))))))
+    (if as-string
+        (format "%.3f" priority)
+      priority)))
+
+(defun org-fc-reprioritize (percent)
+  (interactive "P")
+  (setq percent (or percent (org-fc-initial-priority)))
+  (when-let ((location (org-fc-review-data-location 'create)))
+    (org-with-point-at (cdr location)
+      (when (re-search-backward "priority" (car location) t)
+        (next-line 2)
+        (org-table-get-field nil (format "%.3f" percent)))
+      (org-table-align))))
+
 ;;; Sessions
 
 (defclass org-fc-review-session ()

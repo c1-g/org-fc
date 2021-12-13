@@ -194,7 +194,7 @@ will turn to this,
          (lambda (history i)
            (org-fc-review-history-set
             (list (plist-get history :position)
-                  (or (plist-get history :priority) "")
+                  (or (plist-get history :priority) "-")
                   (plist-get history :ease)
                   (plist-get history :box)
                   (plist-get history :interval)
@@ -209,14 +209,25 @@ will turn to this,
     (org-table-goto-column 2)
     (org-table-insert-column)
     (insert "priority")
-    (org-table-align)))
+    (org-table-align)
+    (next-line 2)
+    (let ((limit (length (org-fc-review-data-get)))
+          (count 0))
+      (while (not (= count limit))
+        (org-table-get-field 2 (org-fc-initial-priority
+                                t
+                                (string-to-number
+                                 (string-trim (org-table-get-field 3)))))
+        (org-table-align)
+        (next-line)
+        (cl-incf count 1)))))
 
 (defun org-fc-migrate-wizard ()
   (interactive)
   (let* ((index (org-fc-index '(:paths all)))
          (ids (delete-dups
                (mapcar (lambda (plist)
-                         (plist-get plist :id))
+                          (plist-get plist :id))
                        index))))
     (dolist (id ids)
       (org-id-goto id)
