@@ -9,7 +9,8 @@ BEGIN {
 {
     date = $1;
     box = $6;
-    rating = $8;
+    if (NF == 10) { rating = $8; }
+    else if (NF == 11) { rating = $9; }
 
     if (box >= min_box) {
         if (date > t_day) {

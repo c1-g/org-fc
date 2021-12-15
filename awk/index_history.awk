@@ -10,8 +10,10 @@ BEGIN {
     position = $4;
     ease = $5
     box = $6;
-    interval = $7
-    rating = $8;
+    interval = $7;
+    
+    if (NF == 10) { rating = $8; }
+    else if (NF == 11) { rating = $9; }
 
     }
 
