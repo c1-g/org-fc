@@ -518,15 +518,20 @@ removed."
 
 ;;; Priority
 (defun org-fc-initial-priority (&optional as-string ease)
-  ""
-  (let ((priority (* 100 (/ (float (or ease (org-fc-algo-sm2-ease-initial)))
-                            (length (buffer-substring-no-properties
-                                     (save-excursion (org-fc-end-of-meta-data t)
-                                                     (point))
-                                     (point-max)))))))
-    (if as-string
-        (format "%.3f" priority)
-      priority)))
+  "Return a float based on the content of this buffer.
+AS-STRING will return the float as a string and EASE will help with the computation."
+  (save-excursion
+    (let* ((content (abs (progn (org-back-to-heading-or-point-min)
+                                (org-fc-end-of-meta-data t)
+                                (- (point)
+                                   (progn (outline-next-visible-heading 1) (point))))))
+           (priority (* 100 (/ (float (or ease (org-fc-algo-sm2-ease-initial)))
+                               (if (zerop content)
+                                   "10"
+                                 content)))))
+      (if as-string
+          (format "%.3f" priority)
+        priority))))
 
 (defun org-fc-reprioritize (percent)
   (interactive "P")
