@@ -165,13 +165,11 @@ EASE, BOX and INTERVAL are the current parameters of the card."
 
 (defun org-fc-algo-sm2-initial-review-data (position)
   "Initial SM2 review data for POSITION."
-  (list position (format "%.1f" (* 100 (/ (float (org-fc-algo-sm2-ease-initial))
-                                          (length (buffer-substring-no-properties
-                                                   (save-excursion (org-fc-end-of-meta-data t)
-                                                                   (point))
-                                                   (point-max))))))
+  (list position
+        (org-fc-initial-priority t)
         (org-fc-algo-sm2-ease-initial)
-        0 0
+        0
+        0
         (org-fc-timestamp-in 0)))
 
 ;;; Footer
