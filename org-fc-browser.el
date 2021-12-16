@@ -39,16 +39,11 @@ a list of vector for it."
   :type 'function
   :group 'org-fc)
 
-(defcustom org-fc-browser-title-length 70
-  "Length for the string of a title."
-  :type 'integer
-  :group 'org-fc)
-
 (define-derived-mode org-fc-browser-mode tablist-mode "org-fc browser"
   "Major mode for browsing flashcards created by org-fc."
   (setq-local revert-buffer-function #'org-fc-browser-revert)
   (setq tabulated-list-format
-        `[("Title" ,org-fc-browser-title-length nil)
+        `[("Title" 120 nil)
           ("Intrv" 8 t)
           ("Due" 20 t :read-only)
           ("Type" 10 nil)])
