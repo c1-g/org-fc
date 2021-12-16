@@ -281,11 +281,8 @@ rating the card."
    ;; If the card is marked as a demo card, don't log its reviews and
    ;; don't update its review data
    (unless (member org-fc-demo-tag (org-get-tags))
-     (let* ((history (org-fc-review-history-get))
-            (position (assoc position history-of-card
-                             (lambda (car-of-alist key)
-                               (string= (car car-of-alist) key))))
-            (current (car position)))
+     (let* ((history (org-fc-review-history-get position))
+            (current (car history)))
        (unless current
          (error "No review data found for this position"))
        (let ((ease (string-to-number (cl-second current)))
@@ -312,6 +309,7 @@ rating the card."
                   (format "%.2f" next-interval)
                   (org-fc-timestamp-in next-interval)
                   (symbol-name rating)))
+           (setcar current position)
            (org-fc-review-data-set current)))))))
 
 (defun org-fc-review-reset ()
@@ -408,6 +406,7 @@ END is the start of the line with :END: on it."
   "Set the cards review data to DATA."
   (if (listp (car data))
       (mapcar #'org-fc-review-data-set data)
+    (org-show-all)
     (save-excursion
       (let ((location (org-fc-review-data-location 'create))
             (history (org-fc-review-history-get (car data)))
@@ -425,7 +424,7 @@ END is the start of the line with :END: on it."
                (goto-char (car location))
                (re-search-forward org-table-hline-regexp
                                   (cdr location) t
-                                  (string-to-number position))
+                                  (1+ (string-to-number position)))
                (org-table-next-row)
                (org-table-get-field 1 (number-to-string (length history)))
                (setcar data "0"))
