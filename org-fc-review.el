@@ -526,7 +526,7 @@ AS-STRING will return the float as a string and EASE will help with the computat
                                    (progn (outline-next-visible-heading 1) (point))))))
            (priority (* 100 (/ (float (or ease (org-fc-algo-sm2-ease-initial)))
                                (if (zerop content)
-                                   "10"
+                                   100
                                  content)))))
       (if as-string
           (format "%.3f" priority)
