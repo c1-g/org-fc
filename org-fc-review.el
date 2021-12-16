@@ -532,14 +532,22 @@ AS-STRING will return the float as a string and EASE will help with the computat
           (format "%.3f" priority)
         priority))))
 
+(defun org-fc-priority-color (priority)
+  (setq priority (if (stringp priority)
+                     (string-to-number priority)
+                   priority))
+  (apply #'color-rgb-to-hex
+         (color-hsl-to-rgb (/ priority 100) 1 0.5)))
+
 (defun org-fc-reprioritize (percent)
   (interactive "P")
+  (org-show-all)
   (setq percent (or percent (org-fc-initial-priority)))
   (when-let ((location (org-fc-review-data-location 'create)))
     (org-with-point-at (cdr location)
       (when (re-search-backward "priority" (car location) t)
         (next-line 2)
-        (org-table-get-field nil (format "%.3f" percent)))
+        (org-table-get-field nil (number-to-string percent)))
       (org-table-align))))
 
 ;;; Sessions
