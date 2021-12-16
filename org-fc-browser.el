@@ -23,6 +23,9 @@
 ;; 
 
 ;;; Code:
+(require 'org-fc-core)
+(require 'tablist)
+
 (defcustom org-fc-browser-buffer-name "*org-fc Browser*"
   "Name of the buffer to use for displaying the browser view."
   :type 'string
@@ -41,25 +44,17 @@ a list of vector for it."
   :type 'integer
   :group 'org-fc)
 
-
-(defvar org-fc-browser-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "n") #'next-line)
-    (define-key map (kbd "p") #'previous-line)
-    (define-key map (kbd "<return>") #'org-fc-browser-open-id)
-    map)
-  "Keymap for `org-fc-browser-mode'.")
-
-
-(define-derived-mode org-fc-browser-mode tabulated-list-mode "org-fc browser"
+(define-derived-mode org-fc-browser-mode tablist-mode "org-fc browser"
   "Major mode for browsing flashcards created by org-fc."
   (setq-local revert-buffer-function #'org-fc-browser-revert)
-  (setq tabulated-list-format `[("Title" ,org-fc-browser-title-length nil)
-                                ("Intrv" 6 t)
-                                ("Due" 20 t)
-                                ("Type" 10 nil)])
+  (setq tabulated-list-format
+        `[("Title" ,org-fc-browser-title-length nil)
+          ("Intrv" 8 t)
+          ("Due" 20 t :read-only)
+          ("Type" 10 nil)])
   (setq tabulated-list-entries (funcall org-fc-browser-list-entries-function))
-  (setq tabulated-list-padding 1)
+  (setq tablist-operations-function #'org-fc-browser-operations)
+  (setq tabulated-list-padding 0)
   (tabulated-list-init-header))
 
 (defvar org-fc-browser-context org-fc-context-all
@@ -75,17 +70,13 @@ a list of vector for it."
   "Get entry at point from `tabulated-list-entries'."
   (nth (1- (line-number-at-pos)) tabulated-list-entries))
 
-(defun org-fc-browser-open-id ()
-  (interactive)
-  (org-id-open (car (org-fc-browser--get-current-card)) nil))
-
 (defun org-fc-browser-draw-buffer (context)
   "Draw a buffer with a list of all cards for CONTEXT."
   (let* ((buf (get-buffer-create org-fc-browser-buffer-name))
          (inhibit-read-only t))
     (with-current-buffer buf
       (erase-buffer)
-      (tabulated-list-print))))
+      (tabulated-list-print t))))
 
 (defun org-fc-browser-list-entries-default ()
   "Return a list with each element in the form of (CARD-ID [NUMBER TITLE INTERVAL DUE-DATE TYPE])
@@ -109,6 +100,13 @@ from calling `org-fc-index' with `org-fc-browser-context' as its argument."
                      res)
                index)))
     (nreverse res)))
+
+(defun org-fc-browser-operations (op &rest args)
+  (setq org-fc-browser-current-entry (tabulated-list-get-entry))
+  (cl-case op
+    (supported-operations '(find-entry edit-column))
+    (find-entry
+     (apply #'org-id-goto args))))
 
 
 ;;;###autoload
