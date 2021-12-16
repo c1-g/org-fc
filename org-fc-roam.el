@@ -43,13 +43,14 @@
        (ease :not-null)
        (box :not-null)
        (intrv :not-null)
-       (date :not-null)]
+       (date :not-null)
+       (type :not-null)
+       (tags)]
       (:foreign-key
        [node-id]
-       :references
-       nodes [id]
-       :on-delete
-       :cascade))))
+       :references nodes
+       [id]
+       :on-delete :cascade))))
   "Org fc db schemata.")
 
 (defconst org-fc-roam-db--indices
@@ -167,26 +168,33 @@ GET-DB is a function that returns connection to database."
                                    #'string-equal))
                            (file-relative-name
                             file org-roam-directory))))
-               (review-history (org-fc-review-history-get)))
+               (review-history (org-fc-review-history-get))
+               (type (org-entry-get nil org-fc-type-property))
+               (tags org-file-tags))
 
           (when (and (member org-fc-flashcard-tag org-file-tags)
                      review-history)
             (org-roam-db-query
              [:insert :into review-history
                       :values $v1]
-             (seq-map (lambda (pos)
-                        (mapcar (lambda (row)
-                                  (cl-destructuring-bind (pos ease box intrv due)
-                                      row
-                                    (vector id
-                                            (or title "")
-                                            pos
-                                            (string-to-number ease)
-                                            (string-to-number box)
-                                            (string-to-number intrv)
-                                            due)))
-                                pos))
-                      review-history))))))))
+             (seq-map-indexed
+              (lambda (pos n)
+                (mapcar (lambda (row)
+                          (cl-destructuring-bind (pos prior ease box intrv due rating)
+                              row
+                            (vector id
+                                    (or title "")
+                                    (if (org-fc-entry-cloze-p)
+                                        (number-to-string n)
+                                      pos)
+                                    (string-to-number ease)
+                                    (string-to-number box)
+                                    (string-to-number intrv)
+                                    due
+                                    (intern type)
+                                    tags)))
+                        pos))
+              review-history))))))))
 
 (defun org-fc-roam-db-insert-outline-review-history ()
   "Insert outline level review history into `org-roam' database."
@@ -206,25 +214,47 @@ GET-DB is a function that returns connection to database."
                        (cl-return-from
                            org-roam-db-insert-node-data))))
            (title (org-link-display-format title))
-           (review-history (org-fc-review-history-get)))
-      (when (and (member org-fc-flashcard-tag (org-get-tags))
+           (review-history (org-fc-review-history-get))
+           (type (org-entry-get nil org-fc-type-property))
+           (tags (org-get-tags)))
+      
+      (when (and (member org-fc-flashcard-tag tags)
                  review-history)
         (org-roam-db-query
          [:insert :into review-history
                   :values $v1]
-         (seq-map (lambda (pos)
-                    (mapcar (lambda (row)
-                              (cl-destructuring-bind (pos ease box intrv due)
-                                  row
-                                (vector id
-                                        (or title "")
-                                        pos
-                                        (string-to-number ease)
-                                        (string-to-number box)
-                                        (string-to-number intrv)
-                                        due)))
-                            pos))
-                  review-history))))))
+         (seq-map-indexed
+          (lambda (pos n)
+            (mapcar (lambda (row)
+                      (cl-destructuring-bind (pos ease box intrv due)
+                          row
+                        (vector id
+                                (or title "")
+                                (if (org-fc-entry-cloze-p)
+                                    (number-to-string n)
+                                  pos)
+                                (string-to-number ease)
+                                (string-to-number box)
+                                (string-to-number intrv)
+                                due
+                                (intern type)
+                                tags)))
+                    pos))
+          review-history))))))
+
+(defun org-fc-roam-index (_paths &optional _filter)
+  (let ((rows (org-roam-db-query [:select * :from review-history :order-by date])))
+    (cl-loop for row in rows
+             append (pcase-let
+                        ((`(,id ,title ,pos  ,ease ,box ,intrv ,date ,type ,tags) row))
+                      `((:id ,id
+                             :title ,title
+                             :type ,type
+                             :suspended ,(not (not (member org-fc-suspended-tag tags)))
+                             :positions ((:position ,pos :ease ,ease :box ,box :interval ,intrv :due ,(parse-iso8601-time-string date)))
+                             :tags ,tags
+                             :path ,(org-id-find-id-file id)
+                             :filetitle ,(file-name-base (org-id-find-id-file id))))))))
 
 (provide 'org-fc-roam)
 ;;; org-fc-roam.el ends here
