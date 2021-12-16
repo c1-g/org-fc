@@ -304,11 +304,12 @@ rating the card."
              (org-fc-algo-sm2-next-parameters ease box interval rating)
            (setcdr
             current
-            (list (format "%.2f" next-ease)
-                  (number-to-string next-box)
-                  (format "%.2f" next-interval)
-                  (org-fc-timestamp-in next-interval)
-                  (symbol-name rating)))
+            (list
+             (format "%.2f" next-ease)
+             (number-to-string next-box)
+             (format "%.2f" next-interval)
+             (org-fc-timestamp-in next-interval)
+             (symbol-name rating)))
            (setcar current position)
            (org-fc-review-data-set current)))))))
 
@@ -410,7 +411,8 @@ END is the start of the line with :END: on it."
     (save-excursion
       (let ((location (org-fc-review-data-location 'create))
             (history (org-fc-review-history-get (car data)))
-            (position (car data)))
+            (position (car data))
+            (rating (nthcdr 5 data)))
         
         (goto-char (cdr location))
         (cond ((eq (car location) (cdr location))
@@ -419,7 +421,9 @@ END is the start of the line with :END: on it."
 
               ((and history (not (org-fc-entry-cloze-p)))
                (re-search-backward (regexp-quote position) (car location) t)
-               (org-table-get-field 1 (number-to-string (length history))))
+               (org-table-get-field 1 (number-to-string (length history)))
+               (org-table-get-field 6 (car rating))
+               (setcar rating "Future"))
               ((and history (org-fc-entry-cloze-p))
                (goto-char (car location))
                (re-search-forward org-table-hline-regexp
@@ -427,8 +431,10 @@ END is the start of the line with :END: on it."
                                   (1+ (string-to-number position)))
                (org-table-next-row)
                (org-table-get-field 1 (number-to-string (length history)))
-               (setcar data "0"))
-              (t (insert "|-|-|-|-|-|-|\n")))
+               (org-table-get-field 6 (car rating))
+               (setcar data "0")
+               (setcar rating "Future"))
+              (t (insert "|-|-|-|-|-|-|-|\n")))
 
         (beginning-of-line)
         (insert "| " (mapconcat (lambda (datum)
