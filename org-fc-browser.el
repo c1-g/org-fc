@@ -52,7 +52,9 @@ a list of vector for it."
           ("Intrv" 8 t)
           ("Due" 20 t :read-only)
           ("Type" 10 nil)])
+  (hl-line-mode)
   (setq tabulated-list-entries (funcall org-fc-browser-list-entries-function))
+  (setq tabulated-list-printer #'org-fc-browser-print)
   (setq tablist-operations-function #'org-fc-browser-operations)
   (setq tabulated-list-padding 0)
   (tabulated-list-init-header))
@@ -77,6 +79,101 @@ a list of vector for it."
     (with-current-buffer buf
       (erase-buffer)
       (tabulated-list-print t))))
+
+(defun org-fc-browser-print (id cols)
+  (let ((beg (point))
+        (x (max tabulated-list-padding 0))
+        (ncols (length tabulated-list-format))
+        (inhibit-read-only t))
+    (if (> tabulated-list-padding 0)
+        (insert (make-string x ? )))
+    (let ((tabulated-list--near-rows ; Bind it if not bound yet (Bug#25506).
+           (or (bound-and-true-p tabulated-list--near-rows)
+               (list (or (tabulated-list-get-entry (point-at-bol 0)) cols) cols))))
+      (dotimes (n ncols)
+        (setq x
+              (let* ((format (aref tabulated-list-format n))
+                     (name (nth 0 format))
+                     (width (nth 1 format))
+                     (props (nthcdr 3 format))
+                     (pad-right (or (plist-get props :pad-right)
+                                    1))
+                     (right-align (plist-get props :right-align))
+                     (label (if (stringp (aref cols n))
+                                (aref cols n)
+                              (car (aref cols n))))
+                     (label-width (string-width label))
+                     (help-echo (concat
+                                 (car format)
+                                 ": "
+                                 label))
+                     (opoint (point))
+                     (not-last-col (< (1+ n)
+                                      (length tabulated-list-format)))
+                     (available-space (and not-last-col
+                                           (if right-align
+                                               width
+                                             (tabulated-list--available-space
+                                              width
+                                              n)))))
+                ;; Truncate labels if necessary (except last column).
+                ;; Don't truncate to `width' if the next column is align-right
+                ;; and has some space left, truncate to `available-space' instead.
+                (when (and not-last-col
+                           (> label-width available-space))
+                  (setq label (truncate-string-to-width label available-space nil nil t t)
+                        label-width available-space))
+                (setq label (bidi-string-mark-left-to-right label))
+                (when (and right-align
+                           (> width label-width))
+                  (let ((shift (- width label-width)))
+                    (insert (propertize
+                             (make-string shift ?\s)
+                             'face
+                             'header-line
+                             'display
+                             `(space :align-to ,(+ x shift))))
+                    (setq width (- width shift))
+                    (setq x (+ x shift))))
+                (if (stringp (aref cols n))
+                    (insert (if (get-text-property
+                                 0
+                                 'help-echo
+                                 label)
+                                label
+                              (propertize
+                               label
+                               'help-echo
+                               help-echo)))
+                  (apply 'insert-text-button label (cdr (aref cols n))))
+                (let ((next-x (1- (+ x pad-right width))))
+                  ;; No need to append any spaces if this is the last column.
+                  (when not-last-col
+                    (when (> pad-right 0)
+                      (insert (make-string pad-right ?\s)))
+                    (insert (propertize
+                             ;; We need at least one space to align correctly.
+                             (make-string
+                              (1- (- width (min 1 width label-width)))
+                              ?\s)
+                             'display
+                             `(space :align-to ,next-x)))
+                    (insert (propertize
+                             ;; We need at least one space to align correctly.
+                             (make-string
+                              1
+                              ?\s)
+                             'face 'header-line
+                             'display `(space))))
+                  (put-text-property opoint (point)
+                   'tabulated-list-column-name
+                   name)
+                  next-x)))))
+    (insert ?\n)
+    ;; Ever so slightly faster than calling `put-text-property' twice.
+    (add-text-properties
+     beg (point)
+     `(tabulated-list-id ,id tabulated-list-entry ,cols))))
 
 (defun org-fc-browser-list-entries-default ()
   "Return a list with each element in the form of (CARD-ID [NUMBER TITLE INTERVAL DUE-DATE TYPE])
