@@ -280,11 +280,8 @@ rating the card."
    ;; If the card is marked as a demo card, don't log its reviews and
    ;; don't update its review data
    (unless (member org-fc-demo-tag (org-get-tags))
-     (let* ((history (org-fc-review-history-get))
-            (position (assoc position history-of-card
-                             (lambda (car-of-alist key)
-                               (string= (car car-of-alist) key))))
-            (current (car position)))
+     (let* ((history (org-fc-review-history-get position))
+            (current (car history)))
        (unless current
          (error "No review data found for this position"))
        (let ((priority (string-to-number (cl-second current)))
@@ -308,10 +305,12 @@ rating the card."
              (org-fc-algo-sm2-next-parameters ease box interval rating)
            (setcdr
             current
-            (list (format "%.2f" next-ease)
-                  (number-to-string next-box)
-                  (format "%.2f" next-interval)
-                  (org-fc-timestamp-in next-interval)))
+            (list
+             (org-fc-initial-priority t next-ease)
+             (format "%.2f" next-ease)
+             (number-to-string next-box)
+             (format "%.2f" next-interval)
+             (org-fc-timestamp-in next-interval)))
            (org-fc-review-data-set current)))))))
 
 (defun org-fc-review-reset ()
