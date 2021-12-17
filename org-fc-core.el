@@ -70,6 +70,11 @@ Used to generate absolute paths to the awk scripts.")
   :type 'function
   :group 'org-fc)
 
+(defcustom org-fc-index-filter-function #'org-fc-index-filter-due
+  "Function used to filter cards."
+  :type 'function
+  :group 'org-fc)
+
 (defcustom org-fc-index-sort-function #'org-fc-index-sort-cards
   "Function used to sort cards."
   :type 'function
@@ -676,7 +681,7 @@ Positions are shuffled in a way that preserves the order of the
      #'cdr
      (sort positions (lambda (a b) (> (car a) (car b)))))))
 
-;;; Sorting Cards
+;;;; Cards sorter
 ;; TODO: Documentation
 (defun org-fc-index-sort-cards (cards)
   (if org-fc-shuffle-positions

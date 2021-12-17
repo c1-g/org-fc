@@ -94,7 +94,7 @@ Valid contexts:
       (when (yes-or-no-p "Flashcards are already being reviewed. Resume? ")
         (org-fc-review-resume))
     (let* ((index (org-fc-index context))
-           (cards (org-fc-index-filter-due index)))
+           (cards (funcall org-fc-index-filter-function index)))
       (setq cards (funcall org-fc-index-sort-function cards))
       (if (null cards)
           (message "No cards due right now")
