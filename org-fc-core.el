@@ -70,7 +70,7 @@ Used to generate absolute paths to the awk scripts.")
   :type 'function
   :group 'org-fc)
 
-(defcustom org-fc-sort-function #'org-fc-sort-cards
+(defcustom org-fc-index-sort-function #'org-fc-index-sort-cards
   "Function used to sort cards."
   :type 'function
   :group 'org-fc)
@@ -678,7 +678,7 @@ Positions are shuffled in a way that preserves the order of the
 
 ;;; Sorting Cards
 ;; TODO: Documentation
-(defun org-fc-sort-cards (cards)
+(defun org-fc-index-sort-cards (cards)
   (if org-fc-shuffle-positions
       (setq cards (org-fc-index-shuffled-positions cards))
     (setq cards (org-fc-index-positions cards))))
