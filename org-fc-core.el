@@ -133,6 +133,21 @@ Does not apply to cloze single and cloze enumeration cards."
   :type 'boolean
   :group 'org-fc)
 
+;;;; Sorting
+(defcustom org-fc-topic-proportion 20
+  "Proportion of topic type cards in comparision to others.
+For the default value of 20, if you have 100 cards due, the
+proportion of topic vs items is 20:80 which is in the ratio of
+1:4 which means that for every 4 item there will be 1 topic that
+comes after for review.")
+
+(defcustom org-fc-item-randomized-proportion 80
+  "Proportion of randomized items in comparision to prioritized items.")
+
+(defcustom org-fc-topic-randomized-proportion 80
+  "Proportion of randomized topic in comparision to prioritized topics.")
+
+
 ;;; Helper Functions
 
 (defun org-fc-member-p (path)
