@@ -684,28 +684,30 @@ Positions are shuffled in a way that preserves the order of the
 ;;;; Cards sorter
 ;; TODO: Documentation
 (defun org-fc--index-sort-others (index)
-  (let ((ratio (list (- 100 org-fc-shuffled-item-proportion) org-fc-shuffled-item-proportion)))
-    (cond ((not org-fc-shuffled-item-proportion) (org-fc-index-positions index))
-          ((eq org-fc-shuffled-item-proportion 0) (org-fc-index-positions index))
-          ((eq org-fc-shuffled-item-proportion 100) (org-fc-index-shuffled-positions index))
-          (t (setq ratio (mapcar
-                          (lambda (it)
-                            (round (/ it (float (apply #'min ratio)))))
-                          ratio))
-             (org-fc-interleave (seq-partition index (cl-first ratio))
-                                (org-fc-index-shuffled-positions (seq-partition index (cl-second ratio))))))))
+  (when index
+    (let ((ratio (list (- 100 org-fc-shuffled-item-proportion) org-fc-shuffled-item-proportion)))
+      (cond ((not org-fc-shuffled-item-proportion) (org-fc-index-positions index))
+            ((eq org-fc-shuffled-item-proportion 0) (org-fc-index-positions index))
+            ((eq org-fc-shuffled-item-proportion 100) (org-fc-index-shuffled-positions index))
+            (t (setq ratio (mapcar
+                            (lambda (it)
+                              (round (/ it (float (apply #'min ratio)))))
+                            ratio))
+               (org-fc-interleave (seq-partition index (cl-first ratio))
+                                  (org-fc-index-shuffled-positions (seq-partition index (cl-second ratio)))))))))
 
 (defun org-fc--index-sort-topic (index)
-  (let ((ratio (list (- 100 org-fc-shuffled-topic-proportion) org-fc-shuffled-topic-proportion)))
-    (cond ((not org-fc-shuffled-topic-proportion) (org-fc-index-positions index))
-          ((eq org-fc-shuffled-topic-proportion 0) (org-fc-index-positions index))
-          ((eq org-fc-shuffled-topic-proportion 100) (org-fc-index-shuffled-positions index))
-          (t (setq ratio (mapcar
-                          (lambda (it)
-                            (round (/ it (float (apply #'min ratio)))))
-                          ratio))
-             (org-fc-interleave (seq-partition index (cl-first ratio))
-                                (org-fc-index-shuffled-positions (seq-partition index (cl-second ratio))))))))
+  (when index
+    (let ((ratio (list (- 100 org-fc-shuffled-topic-proportion) org-fc-shuffled-topic-proportion)))
+      (cond ((not org-fc-shuffled-topic-proportion) (org-fc-index-positions index))
+            ((eq org-fc-shuffled-topic-proportion 0) (org-fc-index-positions index))
+            ((eq org-fc-shuffled-topic-proportion 100) (org-fc-index-shuffled-positions index))
+            (t (setq ratio (mapcar
+                            (lambda (it)
+                              (round (/ it (float (apply #'min ratio)))))
+                            ratio))
+               (org-fc-interleave (seq-partition index (cl-first ratio))
+                                  (org-fc-index-shuffled-positions (seq-partition index (cl-second ratio)))))))))
 
 (defun org-fc-index-sort-cards (index)
   (let ((alist (seq-group-by (lambda (it) (eq (plist-get it :type) 'topic))
