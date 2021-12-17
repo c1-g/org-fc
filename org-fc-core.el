@@ -170,7 +170,7 @@ comes after for review.")
   (when lists
     (let (result)
       (while (flatten-list lists)
-        (let ((list lists))
+        (let ((list lists) it)
           (while list
             (setq it (pop list))
             (if (not (listp (caar it)))
