@@ -683,10 +683,28 @@ Positions are shuffled in a way that preserves the order of the
 
 ;;;; Cards sorter
 ;; TODO: Documentation
-(defun org-fc-index-sort-cards (cards)
-  (if org-fc-shuffle-positions
-      (setq cards (org-fc-index-shuffled-positions cards))
-    (setq cards (org-fc-index-positions cards))))
+(defun org-fc--index-sort-others (index))
+
+(defun org-fc--index-sort-topic (index))
+
+(defun org-fc-index-sort-cards (index)
+  (let ((alist (seq-group-by (lambda (it) (eq (plist-get it :type) 'topic))
+                             index))
+        (ratio (list (- 100 org-fc-topic-proportion) org-fc-topic-proportion))
+        others topic)
+    
+    (setq topic (org-fc--index-sort-topic (cdr (assq t alist))))
+    (setq others (org-fc--index-sort-others (cdr (assq nil alist))))
+
+    (cond ((not org-fc-shuffle-positions) (org-fc-index-positions index))
+          ((eq org-fc-topic-proportion 100) (append topic others))
+          ((eq org-fc-topic-proportion 0) (append others topic))
+          (t (setq ratio (mapcar
+                          (lambda (it)
+                            (round (/ it (float (apply #'min ratio)))))
+                          ratio))
+             (org-fc-interleave (seq-partition others (cl-first ratio))
+                                (seq-partition topic (cl-second ratio)))))))
 
 ;;; Demo Mode
 
