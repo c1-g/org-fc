@@ -80,6 +80,11 @@ Used to generate absolute paths to the awk scripts.")
   :type 'function
   :group 'org-fc)
 
+(defcustom org-fc-index-sort-predicate #'ignore
+  "Predicate function used to sort cards."
+  :type 'function
+  :group 'org-fc)
+
 ;;;; Org Tags / Properties
 
 (defcustom org-fc-type-property "FC_TYPE"
@@ -165,13 +170,16 @@ comes after for review.")
   (when lists
     (let (result)
       (while (flatten-list lists)
-        (let ((list lists) (i 0) it it-index)
-          (ignore it it-index)
+        (let ((list lists))
           (while list
-            (setq it (pop list) it-index i i (1+ i))
-            (setq result (cons (car it) result))))
+            (setq it (pop list))
+            (if (not (listp (caar it)))
+                (setq result (cons (car it) result))
+              (mapc (lambda (l)
+                      (setq result (cons l result)))
+                    (car it)))))
         (setq lists (mapcar 'cdr lists)))
-      (flatten-list (nreverse result)))))
+      (delete nil (nreverse result)))))
 
 (defun org-fc-member-p (path)
   "Check if PATH is member of one of the `org-fc-directories'."
@@ -685,45 +693,35 @@ Positions are shuffled in a way that preserves the order of the
 ;; TODO: Documentation
 (defun org-fc--index-sort-others (index)
   (when index
-    (let ((ratio (list (- 100 org-fc-shuffled-item-proportion) org-fc-shuffled-item-proportion)))
-      (cond ((not org-fc-shuffled-item-proportion) (org-fc-index-positions index))
-            ((eq org-fc-shuffled-item-proportion 0) (org-fc-index-positions index))
-            ((eq org-fc-shuffled-item-proportion 100) (org-fc-index-shuffled-positions index))
-            (t (setq ratio (mapcar
-                            (lambda (it)
-                              (round (/ it (float (apply #'min ratio)))))
-                            ratio))
-               (org-fc-interleave (seq-partition index (cl-first ratio))
-                                  (org-fc-index-shuffled-positions (seq-partition index (cl-second ratio)))))))))
+    (cond ((not org-fc-shuffle-positions) (org-fc-index-positions index))
+          ((eq org-fc-shuffled-item-proportion 0) (org-fc-index-positions index))
+          ((eq org-fc-shuffled-item-proportion 100) (org-fc-index-shuffled-positions index))
+          (t (sort index org-fc-index-sort-predicate)
+             (sort index (lambda (_e1 _e2)
+                           (> org-fc-shuffled-item-proportion (random 100))))))))
 
 (defun org-fc--index-sort-topic (index)
   (when index
-    (let ((ratio (list (- 100 org-fc-shuffled-topic-proportion) org-fc-shuffled-topic-proportion)))
-      (cond ((not org-fc-shuffled-topic-proportion) (org-fc-index-positions index))
-            ((eq org-fc-shuffled-topic-proportion 0) (org-fc-index-positions index))
-            ((eq org-fc-shuffled-topic-proportion 100) (org-fc-index-shuffled-positions index))
-            (t (setq ratio (mapcar
-                            (lambda (it)
-                              (round (/ it (float (apply #'min ratio)))))
-                            ratio))
-               (org-fc-interleave (seq-partition index (cl-first ratio))
-                                  (org-fc-index-shuffled-positions (seq-partition index (cl-second ratio)))))))))
+    (cond ((not org-fc-shuffle-positions) (org-fc-index-positions index))
+          ((eq org-fc-shuffled-topic-proportion 0) (org-fc-index-positions index))
+          ((eq org-fc-shuffled-topic-proportion 100) (org-fc-index-shuffled-positions index))
+          (t (sort index org-fc-index-sort-predicate)
+             (sort index (lambda (_e1 _e2)
+                           (> org-fc-shuffled-topic-proportion (random 100))))))))
 
 (defun org-fc-index-sort-cards (index)
-  (let ((alist (seq-group-by (lambda (it) (eq (plist-get it :type) 'topic))
-                             index))
+  (let ((alist (seq-group-by (lambda (it) (eq (plist-get it :type) 'topic)) index))
         (ratio (list (- 100 org-fc-topic-proportion) org-fc-topic-proportion))
         others topic)
-    
+
     (setq topic (org-fc--index-sort-topic (cdr (assq t alist))))
     (setq others (org-fc--index-sort-others (cdr (assq nil alist))))
 
     (cond ((not org-fc-shuffle-positions) (org-fc-index-positions index))
           ((eq org-fc-topic-proportion 100) (append topic others))
           ((eq org-fc-topic-proportion 0) (append others topic))
-          (t (setq ratio (mapcar
-                          (lambda (it)
-                            (round (/ it (float (apply #'min ratio)))))
+          (t (setq ratio (mapcar (lambda (it)
+                                   (round (/ it (float (apply #'min ratio)))))
                           ratio))
              (org-fc-interleave (seq-partition others (cl-first ratio))
                                 (seq-partition topic (cl-second ratio)))))))
