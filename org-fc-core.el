@@ -70,6 +70,11 @@ Used to generate absolute paths to the awk scripts.")
   :type 'function
   :group 'org-fc)
 
+(defcustom org-fc-sort-function #'org-fc-sort-cards
+  "Function used to sort cards."
+  :type 'function
+  :group 'org-fc)
+
 ;;;; Org Tags / Properties
 
 (defcustom org-fc-type-property "FC_TYPE"
@@ -670,6 +675,13 @@ Positions are shuffled in a way that preserves the order of the
     (mapcar
      #'cdr
      (sort positions (lambda (a b) (> (car a) (car b)))))))
+
+;;; Sorting Cards
+;; TODO: Documentation
+(defun org-fc-sort-cards (cards)
+  (if org-fc-shuffle-positions
+      (setq cards (org-fc-index-shuffled-positions cards))
+    (setq cards (org-fc-index-positions cards))))
 
 ;;; Demo Mode
 

@@ -95,9 +95,7 @@ Valid contexts:
         (org-fc-review-resume))
     (let* ((index (org-fc-index context))
            (cards (org-fc-index-filter-due index)))
-      (if org-fc-shuffle-positions
-          (setq cards (org-fc-index-shuffled-positions cards))
-        (setq cards (org-fc-index-positions cards)))
+      (setq cards (funcall org-fc-sort-function cards))
       (if (null cards)
           (message "No cards due right now")
         (progn
