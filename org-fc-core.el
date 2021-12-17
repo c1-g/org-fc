@@ -722,9 +722,9 @@ Positions are shuffled in a way that preserves the order of the
           ((eq org-fc-topic-proportion 0) (append others topic))
           (t (setq ratio (mapcar (lambda (it)
                                    (round (/ it (float (apply #'min ratio)))))
-                          ratio))
-             (org-fc-interleave (seq-partition others (cl-first ratio))
-                                (seq-partition topic (cl-second ratio)))))))
+                                 ratio))
+             (org-fc-index-positions (org-fc-interleave (seq-partition others (cl-first ratio))
+                                                        (seq-partition topic (cl-second ratio))))))))
 
 ;;; Demo Mode
 
