@@ -173,7 +173,7 @@ comes after for review.")
         (let ((list lists) it)
           (while list
             (setq it (pop list))
-            (if (not (listp (caar it)))
+            (if (not (car-safe (car it)))
                 (setq result (cons (car it) result))
               (mapc (lambda (l)
                       (setq result (cons l result)))
