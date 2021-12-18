@@ -39,6 +39,11 @@ a list of vector for it."
   :type 'function
   :group 'org-fc)
 
+(defface org-fc-browser-hl-line
+  '((t :weight bold :underline t))
+  "Face for the header at point."
+  :group 'org-fc)
+
 (define-derived-mode org-fc-browser-mode tablist-mode "org-fc browser"
   "Major mode for browsing flashcards created by org-fc."
   (setq-local revert-buffer-function #'org-fc-browser-revert)
@@ -47,6 +52,7 @@ a list of vector for it."
           ("Intrv" 8 t)
           ("Due" 20 t :read-only)
           ("Type" 10 nil)])
+  (set (make-local-variable 'hl-line-face) 'org-fc-browser-hl-line)
   (hl-line-mode)
   (setq tabulated-list-entries (funcall org-fc-browser-list-entries-function))
   (setq tabulated-list-printer #'org-fc-browser-print)
