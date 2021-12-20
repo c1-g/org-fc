@@ -39,6 +39,11 @@ a list of vector for it."
   :type 'function
   :group 'org-fc)
 
+(defcustom org-fc-browser-type-color-alist
+  '(("topic" . "light green")
+    (".*" . "deep sky blue"))
+  "")
+
 (defface org-fc-browser-hl-line
   '((t :weight bold :underline t))
   "Face for the header at point."
@@ -137,28 +142,49 @@ a list of vector for it."
                     (setq width (- width shift))
                     (setq x (+ x shift))))
                 (if (stringp (aref cols n))
-                    (insert (if (get-text-property
-                                 0
-                                 'help-echo
-                                 label)
+                    (insert (if (get-text-property 0 'help-echo label)
                                 label
                               (propertize
                                label
                                'help-echo
-                               help-echo)))
+                               help-echo
+                               'face
+                               `(:foreground ,(readable-foreground-color
+                                               (cdr (assoc (aref cols 4)
+                                                           org-fc-browser-type-color-alist
+                                                           #'string-match-p)))
+                                 :background ,(cdr (assoc (aref cols 4)
+                                                          org-fc-browser-type-color-alist
+                                                          #'string-match-p))))))
                   (apply 'insert-text-button label (cdr (aref cols n))))
                 (let ((next-x (1- (+ x pad-right width))))
                   ;; No need to append any spaces if this is the last column.
                   (when not-last-col
                     (when (> pad-right 0)
-                      (insert (make-string pad-right ?\s)))
+                      (insert (propertize (make-string pad-right ?\s)
+                                          'face
+                                          `(:foreground ,(readable-foreground-color
+                                                          (cdr (assoc (aref cols 4)
+                                                                      org-fc-browser-type-color-alist
+                                                                      #'string-match-p)))
+                                            :background ,(cdr (assoc (aref cols 4)
+                                                                     org-fc-browser-type-color-alist
+                                                                     #'string-match-p))))))
                     (insert (propertize
                              ;; We need at least one space to align correctly.
                              (make-string
                               (1- (- width (min 1 width label-width)))
                               ?\s)
                              'display
-                             `(space :align-to ,next-x)))
+                             `(space :align-to ,next-x)
+                             'face
+                             `(:foreground ,(readable-foreground-color
+                                               (cdr (assoc (aref cols 4)
+                                                           org-fc-browser-type-color-alist
+                                                           #'string-match-p)))
+                               :background ,(cdr (assoc (aref cols 4)
+                                                        org-fc-browser-type-color-alist
+                                                        #'string-match-p)))))
                     (insert (propertize
                              ;; We need at least one space to align correctly.
                              (make-string
