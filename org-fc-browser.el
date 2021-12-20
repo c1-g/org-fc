@@ -68,6 +68,15 @@ a list of vector for it."
 (defvar org-fc-browser-context org-fc-context-all
   "Context of the current browser view.")
 
+(defun org-fc-browser--anonymous-face (type)
+  (when-let ((bg-color (cdr (assoc type
+                                   org-fc-browser-type-color-alist
+                                   #'string-match-p))))
+    (append
+     `(:foreground ,(readable-foreground-color bg-color))
+     `(:background ,bg-color))))
+
+
 (defun org-fc-browser-revert (_ignore-auto _noconfirm)
   "Reload the browser."
   (interactive)
@@ -145,13 +154,7 @@ a list of vector for it."
                                'help-echo
                                help-echo
                                'face
-                               `(:foreground ,(readable-foreground-color
-                                               (cdr (assoc (aref cols 4)
-                                                           org-fc-browser-type-color-alist
-                                                           #'string-match-p)))
-                                 :background ,(cdr (assoc (aref cols 4)
-                                                          org-fc-browser-type-color-alist
-                                                          #'string-match-p))))))
+                               (org-fc-browser--anonymous-face (aref cols 4)))))
                   (apply 'insert-text-button label (cdr (aref cols n))))
                 (let ((next-x (1- (+ x pad-right width))))
                   ;; No need to append any spaces if this is the last column.
@@ -159,13 +162,7 @@ a list of vector for it."
                     (when (> pad-right 0)
                       (insert (propertize (make-string pad-right ?\s)
                                           'face
-                                          `(:foreground ,(readable-foreground-color
-                                                          (cdr (assoc (aref cols 4)
-                                                                      org-fc-browser-type-color-alist
-                                                                      #'string-match-p)))
-                                            :background ,(cdr (assoc (aref cols 4)
-                                                                     org-fc-browser-type-color-alist
-                                                                     #'string-match-p))))))
+                                          (org-fc-browser--anonymous-face (aref cols 4)))))
                     (insert (propertize
                              ;; We need at least one space to align correctly.
                              (make-string
@@ -174,13 +171,7 @@ a list of vector for it."
                              'display
                              `(space :align-to ,next-x)
                              'face
-                             `(:foreground ,(readable-foreground-color
-                                               (cdr (assoc (aref cols 4)
-                                                           org-fc-browser-type-color-alist
-                                                           #'string-match-p)))
-                               :background ,(cdr (assoc (aref cols 4)
-                                                        org-fc-browser-type-color-alist
-                                                        #'string-match-p)))))
+                             (org-fc-browser--anonymous-face (aref cols 4))))
                     (insert (propertize
                              ;; We need at least one space to align correctly.
                              (make-string
