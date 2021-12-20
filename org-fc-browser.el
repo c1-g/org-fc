@@ -42,7 +42,13 @@ a list of vector for it."
 (defcustom org-fc-browser-type-color-alist
   '(("topic" . "light green")
     (".*" . "deep sky blue"))
-  "")
+  "Alist of (REGEXP . COLOR-NAME) used by `org-fc-browser--anonymous-face'.
+
+The REGEXP will be used to match the type of the card and return the COLOR-NAME.
+This COLOR-NAME will be the background color of entries in the browser buffer by
+building an anonymous face with `org-fc-browser--anonymous-face' based on it."
+  :type '(alist :key-type regexp :value-type color)
+  :group 'org-fc)
 
 (defcustom org-fc-browser-type-icons-alist
   `(("topic" . ,(expand-file-name "icons/Topic_memorized.png" org-fc-source-path))
@@ -74,6 +80,11 @@ a list of vector for it."
   "Context of the current browser view.")
 
 (defun org-fc-browser--anonymous-face (type)
+  "Return an anonymous face specs with background color based on TYPE.
+
+TYPE will be use to match a color in `org-fc-browser-type-color-alist' and
+this function will return that color as a background and a readable foreground
+with it."
   (when-let ((bg-color (cdr (assoc type
                                    org-fc-browser-type-color-alist
                                    #'string-match-p))))
