@@ -53,7 +53,14 @@ building an anonymous face with `org-fc-browser--anonymous-face' based on it."
 (defcustom org-fc-browser-type-icons-alist
   `(("topic" . ,(expand-file-name "icons/Topic_memorized.png" org-fc-source-path))
     (".*" . ,(expand-file-name "icons/Item_memorized.png" org-fc-source-path)))
-  "")
+  "Alist of (REGEXP . FILENAME) used by `org-fc-browser--icons-display-specs'.
+
+The REGEXP will be used to match the type of the card and return the FILENAME.
+The FILENAME will be the path to the icons inserted before the title of an entry
+in the browser buffer.
+The icons is inserted by building a display specs based on the FILENAME."
+  :type '(alist :key-type regexp :value-type (file :must-match t))
+  :group 'org-fc)
 
 (defface org-fc-browser-hl-line
   '((t :weight bold :underline t))
@@ -93,6 +100,10 @@ with it."
      `(:background ,bg-color))))
 
 (defun org-fc-browser--icons-display-specs (type)
+  "Return a display specs with image based on TYPE.
+
+TYPE will be used to find a image file name in `org-fc-browser-type-icons-alist'
+and this function will return an display specs for the image file."
   (when-let ((icon-file (cdr (assoc type
                                     org-fc-browser-type-icons-alist
                                     #'string-match-p))))
