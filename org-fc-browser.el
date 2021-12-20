@@ -74,10 +74,6 @@ a list of vector for it."
   (setq tabulated-list-entries (funcall org-fc-browser-list-entries-function))
   (org-fc-browser-draw-buffer org-fc-browser-context))
 
-(defun org-fc-browser--get-current-card ()
-  "Get entry at point from `tabulated-list-entries'."
-  (nth (1- (line-number-at-pos)) tabulated-list-entries))
-
 (defun org-fc-browser-draw-buffer (context)
   "Draw a buffer with a list of all cards for CONTEXT."
   (let* ((buf (get-buffer-create org-fc-browser-buffer-name))
