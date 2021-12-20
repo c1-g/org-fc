@@ -40,12 +40,21 @@ a list of vector for it."
   :type 'function
   :group 'org-fc)
 
-(defcustom org-fc-browser-headers 
+(defcustom org-fc-browser-headers
   '(("Title" nil)
     ("Intrv" t)
     ("Due" t :read-only)
     ("Type" nil))
-  "")
+  "A list of elements (NAME SORT . PROPS).
+
+To see what these arguments mean, see the documentation of
+`tabulated-list-format'.
+
+Notice that the elements are in the similar format to the
+elements of `tabulated-list-format' but without the WIDTH
+argument. This is because the WIDTH argument will be automatically calculated
+by `org-fc-make-tabulated-headers'; the column widths will be based on
+the widest cell in a column.")
 
 (defcustom org-fc-browser-type-color-alist
   '(("topic" . "light green")
