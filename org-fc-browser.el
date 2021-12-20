@@ -157,10 +157,7 @@ and this function will return an display specs for the image file."
                                 (aref cols n)
                               (car (aref cols n))))
                      (label-width (string-width label))
-                     (help-echo (concat
-                                 (car format)
-                                 ": "
-                                 label))
+                     (help-echo (concat (car format) ": " label))
                      (opoint (point))
                      (not-last-col (< (1+ n)
                                       (length tabulated-list-format)))
@@ -209,7 +206,9 @@ and this function will return an display specs for the image file."
                     (insert (propertize
                              ;; We need at least one space to align correctly.
                              (make-string
-                              (1- (- width (min 1 width label-width)))
+                              (if (zerop (- width (min 1 width label-width)))
+                                  (- width (min 1 width label-width))
+                                (1- (- width (min 1 width label-width))))
                               ?\s)
                              'display
                              `(space :align-to ,next-x)
