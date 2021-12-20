@@ -28,7 +28,6 @@
 ;; See: https://github.com/d12frosted/vulpea.
 
 ;;; Code:
-(require 'org-fc)
 (require 'org-fc-core)
 (require 'org-fc-review)
 
