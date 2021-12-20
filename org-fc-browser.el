@@ -25,6 +25,7 @@
 ;;; Code:
 (require 'org-fc-core)
 (require 'tablist)
+(require 'dash)
 
 (defcustom org-fc-browser-buffer-name "*org-fc Browser*"
   "Name of the buffer to use for displaying the browser view."
@@ -38,6 +39,13 @@ The function will be passed an index from `org-fc-index' and must return
 a list of vector for it."
   :type 'function
   :group 'org-fc)
+
+(defcustom org-fc-browser-headers 
+  '(("Title" nil)
+    ("Intrv" t)
+    ("Due" t :read-only)
+    ("Type" nil))
+  "")
 
 (defcustom org-fc-browser-type-color-alist
   '(("topic" . "light green")
@@ -55,17 +63,33 @@ building an anonymous face with `org-fc-browser--anonymous-face' based on it."
   "Face for the header at point."
   :group 'org-fc)
 
+(defun org-fc-make-tabulated-headers ()
+  "column width are calculated by picking the max width of every cell under that
+column + the column name"
+  (let* ((column-names (mapcar (lambda (column)
+                                 (if (stringp column)
+                                     column
+                                   (car column)))
+                               org-fc-browser-headers))
+         (widths
+          (-reduce-from
+           (lambda (acc x)
+             (-zip-with (lambda (l r) (max l (length r))) acc (append x '())))
+           (-map #'length column-names)
+           (-map #'cadr tabulated-list-entries))))
+    (cl-map
+     #'vector #'identity
+     (-zip-with
+      (lambda (col size) (append (list col (+ size 2)) (cdr (assoc col org-fc-browser-headers))))
+      column-names widths))))
+
 (define-derived-mode org-fc-browser-mode tablist-mode "org-fc browser"
   "Major mode for browsing flashcards created by org-fc."
   (setq-local revert-buffer-function #'org-fc-browser-revert)
-  (setq tabulated-list-format
-        `[("Title" 120 nil)
-          ("Intrv" 8 t)
-          ("Due" 20 t :read-only)
-          ("Type" 10 nil)])
   (set (make-local-variable 'hl-line-face) 'org-fc-browser-hl-line)
   (hl-line-mode)
   (setq tabulated-list-entries (funcall org-fc-browser-list-entries-function))
+  (setq tabulated-list-format (org-fc-make-tabulated-headers))
   (setq tabulated-list-printer #'org-fc-browser-print)
   (setq tablist-operations-function #'org-fc-browser-operations)
   (setq tabulated-list-padding 0)
