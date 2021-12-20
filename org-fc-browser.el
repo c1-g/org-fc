@@ -44,6 +44,11 @@ a list of vector for it."
     (".*" . "deep sky blue"))
   "")
 
+(defcustom org-fc-browser-type-icons-alist
+  `(("topic" . ,(expand-file-name "icons/Topic_memorized.png" org-fc-source-path))
+    (".*" . ,(expand-file-name "icons/Item_memorized.png" org-fc-source-path)))
+  "")
+
 (defface org-fc-browser-hl-line
   '((t :weight bold :underline t))
   "Face for the header at point."
@@ -76,6 +81,18 @@ a list of vector for it."
      `(:foreground ,(readable-foreground-color bg-color))
      `(:background ,bg-color))))
 
+(defun org-fc-browser--icons-display-specs (type)
+  (when-let ((icon-file (cdr (assoc type
+                                    org-fc-browser-type-icons-alist
+                                    #'string-match-p))))
+    (let ((bg-color (cdr (assoc type
+                                org-fc-browser-type-color-alist
+                                #'string-match-p))))
+      (cons 'image (append
+                    `(:type ,(image-type icon-file))
+                    `(:file ,icon-file)
+                    `(:ascent center))))))
+
 
 (defun org-fc-browser-revert (_ignore-auto _noconfirm)
   "Reload the browser."
@@ -98,6 +115,10 @@ a list of vector for it."
         (inhibit-read-only t))
     (if (> tabulated-list-padding 0)
         (insert (make-string x ? )))
+    ;; Icons
+    (when org-fc-browser-type-icons-alist
+      (insert (propertize " " 'display (org-fc-browser--icons-display-specs (aref cols 4)))))
+    
     (let ((tabulated-list--near-rows ; Bind it if not bound yet (Bug#25506).
            (or (bound-and-true-p tabulated-list--near-rows)
                (list (or (tabulated-list-get-entry (point-at-bol 0)) cols) cols))))
@@ -180,8 +201,8 @@ a list of vector for it."
                              'face 'header-line
                              'display `(space))))
                   (put-text-property opoint (point)
-                   'tabulated-list-column-name
-                   name)
+                                     'tabulated-list-column-name
+                                     name)
                   next-x)))))
     (insert ?\n)
     ;; Ever so slightly faster than calling `put-text-property' twice.
