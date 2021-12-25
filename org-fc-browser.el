@@ -24,6 +24,8 @@
 
 ;;; Code:
 (require 'org-fc-core)
+;; For cloze regexp!
+(require 'org-fc-type-cloze)
 (require 'tablist)
 
 (defcustom org-fc-browser-buffer-name "*org-fc Browser*"
@@ -158,7 +160,8 @@ with it."
                     (insert (if (get-text-property 0 'help-echo label)
                                 label
                               (propertize
-                               label
+                               (replace-regexp-in-string
+                                org-fc-type-cloze-hole-re "[.]" label)
                                'help-echo
                                help-echo
                                'face
