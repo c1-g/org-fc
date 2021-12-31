@@ -285,6 +285,8 @@ rating the card."
             (current (assoc position data #'string=)))
        (unless current
          (error "No review data found for this position"))
+       (when (> delta org-fc-review-ignore-answer-times)
+         (setq delta org-fc-review-ignore-answer-times))
        (let ((ease (string-to-number (cl-second current)))
              (box (string-to-number (cl-third current)))
              (interval (string-to-number (cl-fourth current))))

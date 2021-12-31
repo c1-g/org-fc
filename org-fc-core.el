@@ -55,6 +55,25 @@ Used to generate absolute paths to the awk scripts.")
   :type 'string
   :group 'org-fc)
 
+(defcustom org-fc-review-ignore-answer-times 60
+  "The maximum threshold (in seconds) of how long the \"delta\"
+can be registered in `org-fc-review-history-file'.
+
+
+This is a concept from Anki so here's the extract taken from its manual:
+
+\"Anki monitors how long it takes you to answer each question so that
+it can show you how long was spent studying each day. The time taken
+does not influence scheduling. If you take longer than 60 seconds,
+Anki assumes you have walked away from your computer or have been
+distracted, and limits the recorded time to 60 seconds, so that you
+don’t end up with inaccurate statistics. The ‘ignore answer times…​’
+option allows you to adjust the cutoff threshold.\"
+
+This variable is used only by `org-fc-review-update-data'."
+  :type 'integer
+  :group 'org-fc)
+
 (defcustom org-fc-shuffle-positions t
   "Shuffle positions before review."
   :type 'boolean
