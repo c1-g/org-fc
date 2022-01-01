@@ -38,6 +38,7 @@
 
 (require 'org-fc-type-normal)
 (require 'org-fc-type-double)
+(require 'org-fc-type-topic)
 (require 'org-fc-type-text-input)
 (require 'org-fc-type-cloze)
 
