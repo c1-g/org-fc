@@ -39,8 +39,8 @@
 
 (org-fc-register-type
  'topic
- 'org-fc-type-normal-setup
- 'org-fc-noop
+ 'org-fc-type-topic-setup
+ 'ignore
  'org-fc-noop)
 
 
