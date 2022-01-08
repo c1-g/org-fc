@@ -41,17 +41,6 @@ a list of vector for it."
   :type 'function
   :group 'org-fc)
 
-(defcustom org-fc-browser-type-color-alist
-  '(("topic" . "light green")
-    (".*" . "deep sky blue"))
-  "Alist of (REGEXP . COLOR-NAME) used by `org-fc-browser--anonymous-face'.
-
-The REGEXP will be used to match the type of the card and return the COLOR-NAME.
-This COLOR-NAME will be the background color of entries in the browser buffer by
-building an anonymous face with `org-fc-browser--anonymous-face' based on it."
-  :type '(alist :key-type regexp :value-type color)
-  :group 'org-fc)
-
 (defface org-fc-browser-hl-line
   '((t :weight bold :overline t :underline t))
   "Face for the header at point."
@@ -75,20 +64,6 @@ building an anonymous face with `org-fc-browser--anonymous-face' based on it."
 
 (defvar org-fc-browser-context org-fc-context-all
   "Context of the current browser view.")
-
-(defun org-fc-browser--anonymous-face (type)
-  "Return an anonymous face specs with background color based on TYPE.
-
-TYPE will be use to match a color in `org-fc-browser-type-color-alist' and
-this function will return that color as a background and a readable foreground
-with it."
-  (when-let ((bg-color (cdr (assoc type
-                                   org-fc-browser-type-color-alist
-                                   #'string-match-p))))
-    (append
-     `(:foreground ,(readable-foreground-color bg-color))
-     `(:background ,bg-color))))
-
 
 (defun org-fc-browser-revert (_ignore-auto _noconfirm)
   "Reload the browser."
@@ -156,46 +131,40 @@ with it."
                              `(space :align-to ,(+ x shift))))
                     (setq width (- width shift))
                     (setq x (+ x shift))))
-                (if (stringp (aref cols n))
-                    (insert (if (get-text-property 0 'help-echo label)
-                                label
-                              (propertize
-                               (replace-regexp-in-string
-                                org-fc-type-cloze-hole-re "[.]" label)
-                               'help-echo
-                               help-echo
-                               'face
-                               (org-fc-browser--anonymous-face (aref cols 4)))))
-                  (apply 'insert-text-button label (cdr (aref cols n))))
-                (let ((next-x (1- (+ x pad-right width))))
-                  ;; No need to append any spaces if this is the last column.
-                  (when not-last-col
-                    (when (> pad-right 0)
-                      (insert (propertize (make-string pad-right ?\s)
-                                          'face
-                                          (org-fc-browser--anonymous-face (aref cols 4)))))
-                    (insert (propertize
-                             ;; We need at least one space to align correctly.
-                             (make-string
-                              (if (zerop (- width (min 1 width label-width)))
-                                  (- width (min 1 width label-width))
-                                (1- (- width (min 1 width label-width))))
-                              ?\s)
-                             'display
-                             `(space :align-to ,next-x)
-                             'face
-                             (org-fc-browser--anonymous-face (aref cols 4))))
-                    (insert (propertize
-                             ;; We need at least one space to align correctly.
-                             (make-string
-                              1
-                              ?\s)
-                             'face 'header-line
-                             'display `(space))))
-                  (put-text-property opoint (point)
-                   'tabulated-list-column-name
-                   name)
-                  next-x)))))
+                
+                 (if (stringp (aref cols n))
+                     (insert (if (get-text-property 0 'help-echo label)
+                                 label
+                               (propertize
+                                (replace-regexp-in-string org-fc-type-cloze-hole-re "[.]" label)
+                                'help-echo
+                                help-echo)))
+                   (apply 'insert-text-button label (cdr (aref cols n))))
+                 (let ((next-x (1- (+ x pad-right width))))
+                   ;; No need to append any spaces if this is the last column.
+                   (when not-last-col
+                     (when (> pad-right 0)
+                       (insert (make-string pad-right ?\s)))
+                     (insert (propertize
+                              ;; We need at least one space to align correctly.
+                              (make-string
+                               (if (zerop (- width (min 1 width label-width)))
+                                   (- width (min 1 width label-width))
+                                 (1- (- width (min 1 width label-width))))
+                               ?\s)
+                              'display
+                              `(space :align-to ,next-x)))
+                     (insert (propertize
+                              ;; We need at least one space to align correctly.
+                              (make-string
+                               1
+                               ?\s)
+                              'face 'header-line
+                              'display `(space))))
+                   (put-text-property opoint (point)
+                                      'tabulated-list-column-name
+                                      name)
+                   next-x)))))
     (insert ?\n)
     ;; Ever so slightly faster than calling `put-text-property' twice.
     (add-text-properties
