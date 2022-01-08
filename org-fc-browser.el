@@ -53,7 +53,7 @@ building an anonymous face with `org-fc-browser--anonymous-face' based on it."
   :group 'org-fc)
 
 (defface org-fc-browser-hl-line
-  '((t :weight bold :underline t))
+  '((t :weight bold :overline t :underline t))
   "Face for the header at point."
   :group 'org-fc)
 
