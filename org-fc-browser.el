@@ -180,10 +180,9 @@ from calling `org-fc-index' with `org-fc-browser-context' as its argument."
              (let* ((card-plist (pop index))
                     (positions (car (plist-get card-plist :positions))))
                (push (list (plist-get card-plist :id)
-                           (vector (or (if (string-empty-p (plist-get card-plist :title))
-                                           (plist-get card-plist :filetitle)
-                                         (plist-get card-plist :title))
-                                       "No title")
+                           (vector (if (string-empty-p (plist-get card-plist :title))
+                                       (plist-get card-plist :filetitle)
+                                     (plist-get card-plist :title))
                                    (number-to-string (plist-get positions :interval))
                                    (format-time-string
                                     "%FT%TZ"
