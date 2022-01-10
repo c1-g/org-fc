@@ -322,7 +322,6 @@ If the property is already set, it's value is replaced."
             (progn
               (end-of-line)
               (insert "\n"))
-          (forward-line)
           (beginning-of-line))
         (insert "#+" key ": " value "\n")))))
 
