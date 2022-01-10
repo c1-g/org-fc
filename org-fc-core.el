@@ -283,18 +283,22 @@ If point is not inside a flashcard entry, an error is raised."
 
 (defun org-fc--get-tags ()
   "Get tags of heading at point or the file tags if there're no local tags."
-  (or (org-get-tags nil 'local) org-file-tags))
+  (if (org-before-first-heading-p)
+      org-file-tags
+    (org-get-tags nil 'local)))
 
 (defun org-fc--add-tag (tag)
   "Add TAG to the heading at point."
-  (if (org-before-first-heading-p)
-      (org-fc-set-keyword "FILETAGS" (org-make-tag-string
-                                        (cl-remove-duplicates
-                                         (cons tag (org-fc--get-tags)))))
-    (org-set-tags
-     (cl-remove-duplicates
-      (cons tag (org-fc--get-tags))
-      :test #'string=))))
+  (org-with-wide-buffer
+   (if (org-before-first-heading-p)
+       (org-fc-set-keyword "FILETAGS" (org-make-tag-string
+                                       (cl-remove-duplicates
+                                        (cons tag (org-fc--get-tags)))))
+     (org-back-to-heading)
+     (org-set-tags
+      (cl-remove-duplicates
+       (cons tag (org-fc--get-tags))
+       :test #'string=)))))
 
 (defun org-fc--remove-tag (tag)
   "Add TAG to the heading at point."
