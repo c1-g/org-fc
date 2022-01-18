@@ -4,7 +4,9 @@ upcoming changes.
 
 In case a update to the org sources is needed, I'll add a changelog
 entry with updating instructions.
-
+** 0.1.1
+*** Added
+- A "lapses" value in ~org-fc-dashboard~, the average number of times each card has been forgotten.
 ** 0.1.0
 *** Added
 - A ~org-fc-after-flip-hook~ that is run after a card is flipped
