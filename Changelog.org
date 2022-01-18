@@ -4,7 +4,9 @@ upcoming changes.
 
 In case a update to the org sources is needed, I'll add a changelog
 entry with updating instructions.
-
+** 0.1.1
+*** Added
+- A "burden" value in ~org-fc-dashboard~, see [[https://supermemo.guru/wiki/Burden]] for what it means.
 ** 0.1.0
 *** Added
 - A ~org-fc-after-flip-hook~ that is run after a card is flipped
