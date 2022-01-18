@@ -302,8 +302,13 @@ If point is not inside a flashcard entry, an error is raised."
 
 (defun org-fc--remove-tag (tag)
   "Add TAG to the heading at point."
-  (org-set-tags
-   (remove tag (org-fc--get-tags))))
+  (org-with-wide-buffer
+   (if (org-before-first-heading-p)
+       (org-fc-set-keyword "FILETAGS" (org-make-tag-string
+                                       (remove tag (org-fc--get-tags))))
+     (org-back-to-heading)
+     (org-set-tags
+      (remove tag (org-fc--get-tags))))))
 
 ;;; Dealing with keywords
 ;; Thank you, org-roam.
