@@ -237,7 +237,11 @@ environment without svg support."
          (propertize "Review Statistics (All Cards)\n\n" 'face 'org-level-1))
 
         (insert
-         (format "Burden: %6.2f\n" (plist-get stats :burden)))
+         (format "Burden: %6.2f\n" (plist-get stats :burden))
+         (format "Lapses: %6.5f (%d)\n" (/ (float (plist-get (plist-get reviews-stats :all) :again))
+                                           (float (plist-get stats :total)))
+                 (plist-get (plist-get reviews-stats :day) :again)))
+
 
         (dolist (scope '((:day . "Day")
                          (:week . "Week")

@@ -7,6 +7,7 @@ entry with updating instructions.
 ** 0.1.1
 *** Added
 - A "burden" value in ~org-fc-dashboard~, see [[https://supermemo.guru/wiki/Burden]] for what it means.
+- A "lapses" value in ~org-fc-dashboard~, the average number of times each card has been forgotten.
 ** 0.1.0
 *** Added
 - A ~org-fc-after-flip-hook~ that is run after a card is flipped
