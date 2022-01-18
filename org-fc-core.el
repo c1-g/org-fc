@@ -424,21 +424,13 @@ If the property is already set, it's value is replaced."
 Should only be used by the init functions of card TYPEs."
   (if (org-fc-entry-p)
       (error "Headline is already a flashcard"))
-  (if (org-before-first-heading-p)
-      (org-with-point-at 1
-        (org-set-property
-         org-fc-created-property
-         (org-fc-timestamp-in 0))
-        (org-set-property org-fc-type-property type)
-        (org-id-get-create)
-        (org-fc-set-keyword "FILETAGS" org-fc-flashcard-tag))
-    (org-back-to-heading)
-    (org-set-property
-     org-fc-created-property
-     (org-fc-timestamp-in 0))
-    (org-set-property org-fc-type-property type)
-    (org-id-get-create)
-    (org-fc--add-tag org-fc-flashcard-tag)))
+  (org-back-to-heading-or-point-min t)
+  (org-set-property
+   org-fc-created-property
+   (org-fc-timestamp-in 0))
+  (org-set-property org-fc-type-property type)
+  (org-id-get-create)
+  (org-fc--add-tag org-fc-flashcard-tag))
 
 ;;; Card Types
 ;;;; Type Management
