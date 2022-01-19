@@ -1,0 +1,16 @@
+:PROPERTIES:
+:FC_CREATED: 2022-01-18T05:08:49Z
+:FC_TYPE:  cloze
+:ID:       b8ff9a29-781c-11ec-88e9-00d861145941
+:FC_CLOZE_MAX: 1
+:FC_CLOZE_TYPE: deletion
+:END:
+:REVIEW_DATA:
+| position | ease | box | interval | due                  |
+|----------+------+-----+----------+----------------------|
+|        0 |  2.5 |   0 |        0 | 2022-01-18T05:18:08Z |
+|        1 |  2.5 |   0 |        0 | 2022-01-18T05:18:08Z |
+:END:
+#+TITLE: What is Lorem Ipsum?
+#+FILETAGS: :fc:suspended:
+{{Lorem Ipsum }{Latin word}@0}is simply dummy text of the {{printing and typesetting}@1} industry.
