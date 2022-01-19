@@ -70,7 +70,8 @@ BEGINFILE {
 ENDFILE {
     # On `BEGINFILE` we don't know the file's title yet so we output
     # it once done processing the rest of the file.
-    print "  )  :title " (file_title ? escape_string(file_title) : "nil") ")";
+    print "  )  :title " (file_title ? escape_string(file_title) : "nil") \
+        " :filetags " escape_string(parent_tags[0]) ")"; 
 }
 
 ## File Title

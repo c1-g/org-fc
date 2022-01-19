@@ -126,8 +126,9 @@ FILTER can be either nil or a function taking a single card as
                           (plist-put
                            card :tags
                            (org-fc-awk-combine-tags
-                            (plist-get card :inherited-tags)
-                            (plist-get card :local-tags))))
+                            (concat (plist-get file :filetags)
+                                    (plist-get card :inherited-tags))
+                            (plist-get card :local-tags)))
                         (plist-get file :cards))))
           (read output)))
       (error "Org-fc shell error: %s" output))))
