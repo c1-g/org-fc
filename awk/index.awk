@@ -73,31 +73,6 @@ ENDFILE {
     print "  )  :title " (file_title ? escape_string(file_title) : "nil") ")";
 }
 
-## Drawer Parsing
-
-/:PROPERTIES:/ {
-    # if (state == state_file) {
-        state = state_properties;
-        delete properties;
-    # }
-    next;
-}
-
-$0 ~ review_data_drawer {
-    # Make sure the review data comes after the property drawer
-    if (state == state_properties_done) {
-        delete review_data_columns;
-        review_data_ncolumns = 0;
-
-        delete review_data;
-        review_index = 1;
-
-        state = state_review_data;
-    }
-    next;
-}
-
-
 ## File Title
 
 match($0, /^#\+(TITLE|title):[ \t]+(.*)/, a) {
@@ -143,6 +118,29 @@ match($0, /^(\*+)[ \t]+(.*)$/, a) {
     next;
 }
 
+## Drawer Parsing
+
+/:PROPERTIES:/ {
+    # if (state == state_file) {
+        state = state_properties;
+        delete properties;
+    # }
+    next;
+}
+
+$0 ~ review_data_drawer {
+    # Make sure the review data comes after the property drawer
+    if (state == state_properties_done) {
+        delete review_data_columns;
+        review_data_ncolumns = 0;
+
+        delete review_data;
+        review_index = 1;
+
+        state = state_review_data;
+    }
+    next;
+}
 
 /:END:/ {
     if (state == state_properties) {
