@@ -129,6 +129,10 @@ FILTER can be either nil or a function taking a single card as
                             (concat (plist-get file :filetags)
                                     (plist-get card :inherited-tags))
                             (plist-get card :local-tags)))
+                          (plist-put
+                           card :suspended
+                           (or (plist-get file :file-suspended)
+                               (plist-get card :suspended))))
                         (plist-get file :cards))))
           (read output)))
       (error "Org-fc shell error: %s" output))))

@@ -71,7 +71,8 @@ ENDFILE {
     # On `BEGINFILE` we don't know the file's title yet so we output
     # it once done processing the rest of the file.
     print "  )  :title " (file_title ? escape_string(file_title) : "nil") \
-        " :filetags " escape_string(parent_tags[0]) ")"; 
+        " :filetags " escape_string(parent_tags[0]) \
+        " :file-suspended " (file_suspended ? "t" : "nil") ")"; 
 }
 
 ## File Title
@@ -88,6 +89,7 @@ match($0, /^#\+(FILETAGS|filetags):[ \t]+(.*)/, a) {
     # Combine tags to handle multiple FILETAGS lines
     parent_tags[0] = combine_tags(a[2], parent_tags[0]);
     suspended = (parent_tags[0] ~ suspended_tag);
+    file_suspended = suspended;
     next;
 }
 
