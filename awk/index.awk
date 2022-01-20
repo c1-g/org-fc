@@ -43,12 +43,11 @@ BEGIN {
     # Small state machine to make sure cards are in the correct format
     state = 0;
     state_file = 0;
-    state_card = 1;
-    state_properties = 2;
-    state_properties_done = 3;
-    state_review_data = 4;
-    state_review_data_body = 5;
-    state_review_data_done = 6;
+    state_properties = 1;
+    state_properties_done = 2;
+    state_review_data = 3;
+    state_review_data_body = 4;
+    state_review_data_done = 5;
 
     print "(";
 }
@@ -59,6 +58,7 @@ BEGINFILE {
     # Reset filetags
     delete parent_tags;
     file_title = "";
+    title = "";
     parent_tags[0] = "";
     state = state_file;
 
@@ -70,15 +70,9 @@ BEGINFILE {
 ENDFILE {
     # On `BEGINFILE` we don't know the file's title yet so we output
     # it once done processing the rest of the file.
-    print "  )  :title " (file_title ? escape_string(file_title) : "nil") ")";
-}
-
-## File Tags
-
-match($0, /^#\+(FILETAGS|filetags):[ \t]+(.*)/, a) {
-    # Combine tags to handle multiple FILETAGS lines
-    parent_tags[0] = combine_tags(a[2], parent_tags[0]);
-    next;
+    print "  )  :title " (file_title ? escape_string(file_title) : "nil") \
+        " :filetags " escape_string(parent_tags[0]) \
+        " :file-suspended " (file_suspended ? "t" : "nil") ")"; 
 }
 
 ## File Title
@@ -88,6 +82,17 @@ match($0, /^#\+(TITLE|title):[ \t]+(.*)/, a) {
     file_title = a[2]
     next;
 }
+
+## File Tags
+
+match($0, /^#\+(FILETAGS|filetags):[ \t]+(.*)/, a) {
+    # Combine tags to handle multiple FILETAGS lines
+    parent_tags[0] = combine_tags(a[2], parent_tags[0]);
+    suspended = (parent_tags[0] ~ suspended_tag);
+    file_suspended = suspended;
+    next;
+}
+
 
 ## Heading Parsing
 
@@ -111,7 +116,6 @@ match($0, /^(\*+)[ \t]+(.*)$/, a) {
     id = "none";
 
     if (tags ~ fc_tag) {
-        state = state_card;
         suspended = (tags ~ suspended_tag);
     }
     next;
@@ -120,10 +124,10 @@ match($0, /^(\*+)[ \t]+(.*)$/, a) {
 ## Drawer Parsing
 
 /:PROPERTIES:/ {
-    if (state == state_card) {
+    # if (state == state_file) {
         state = state_properties;
         delete properties;
-    }
+    # }
     next;
 }
 
@@ -157,15 +161,21 @@ $0 ~ review_data_drawer {
         if (cloze_type_property in properties)
             cloze_type = " :cloze-type " properties[cloze_type_property]
 
+        if (title) { title = escape_string(title); }
+        else if (title == "")
+        { title = escape_string(file_title); }
+        else if (file_title == "")
+        { title = "nil"; }
+
         print "    (" \
             ":id " escape_string(properties["ID"])  \
-            " :title " escape_string(title)  \
+            " :title " title         \
             " :type " properties[type_property]     \
             cloze_type                                            \
             " :created " parse_time(properties[created_property]) \
             " :suspended " (suspended ? "t" : "nil")   \
-            " :inherited-tags " escape_string(inherited_tags)  \
-            " :local-tags " escape_string(local_tags)          \
+            " :inherited-tags " escape_string(inherited_tags)   \
+            " :local-tags " escape_string(parent_tags[level])   \
             " :positions (";
 
         # Card positions

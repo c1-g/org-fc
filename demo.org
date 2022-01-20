@@ -1,5 +1,23 @@
+:PROPERTIES:
+:FC_CREATED: 2022-01-20T01:28:57Z
+:FC_TYPE:  cloze
+:ID:       57518b76-7990-11ec-a58d-00d861145941
+:FC_CLOZE_MAX: 0
+:FC_CLOZE_TYPE: deletion
+:END:
+:REVIEW_DATA:
+| position | ease | box | interval | due                  |
+|----------+------+-----+----------+----------------------|
+|        0 |  2.5 |   0 |        0 | 2022-01-20T01:29:01Z |
+:END:
 #+TITLE: Org-Flashcards Demo File
-#+FILETAGS: fc-demo
+#+FILETAGS: :fc:fc-demo:noheading:
+This is a demo file for org-fc, a spaced-repetition system for Emacs' org-mode.
+Usually a flashcard is a headline tagged with org-fc's special tag, but there
+is a more limited way to do a flashcard without a headline and you're looking
+at it right now.
+
+Anyway, {{George Washington}{Name}@0} was the first president of the United States.
 
 * Normal Card                                                            :fc:
 :PROPERTIES:

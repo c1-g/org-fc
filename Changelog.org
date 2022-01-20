@@ -4,6 +4,10 @@ upcoming changes.
 
 In case a update to the org sources is needed, I'll add a changelog
 entry with updating instructions.
+** 0.2.0
+*** Added
+- Support for a file-level flashcard, this kind of flashcard must be at
+  the top of the file, see [[elisp:(progn (org-id-goto "57518b76-7990-11ec-a58d-00d861145941") (org-fc-narrow))][this card]] for example.
 ** 0.1.1
 *** Added
 - A "burden" value in ~org-fc-dashboard~, see [[https://supermemo.guru/wiki/Burden]] for what it means.

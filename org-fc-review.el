@@ -154,8 +154,8 @@ If RESUMING is non-nil, some parts of the buffer setup are skipped."
                 ;; Make sure the headline the card is in is expanded
                 (org-reveal)
                 (org-fc-narrow)
-                (org-fc-hide-keyword-times)
                 (org-fc-hide-drawers)
+                (org-fc-hide-keyword-times)
                 (org-fc-show-latex)
                 (org-display-inline-images)
                 (run-hooks 'org-fc-before-setup-hook)
@@ -280,7 +280,7 @@ rating the card."
   (org-fc-with-point-at-entry
    ;; If the card is marked as a demo card, don't log its reviews and
    ;; don't update its review data
-   (unless (member org-fc-demo-tag (org-get-tags))
+   (unless (member org-fc-demo-tag (org-fc--get-tags))
      (let* ((data (org-fc-review-data-get))
             (current (assoc position data #'string=)))
        (unless current
@@ -355,7 +355,7 @@ drawer, if necessary.  Returned position ignores narrowing.
 BEGINNING is the start of the first line inside the drawer,
 END is the start of the line with :END: on it."
   (org-with-wide-buffer
-   (org-end-of-meta-data)
+   (org-fc-end-of-meta-data)
    (let ((regexp (concat "^[ \t]*:" (regexp-quote org-fc-review-data-drawer) ":[ \t]*$"))
          (end (if (org-at-heading-p) (point)
                 (save-excursion (outline-next-heading) (point))))

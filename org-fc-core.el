@@ -227,13 +227,16 @@ indenting the current heading."
 (defmacro org-fc-with-point-at-entry (&rest body)
   "Execute BODY with point at the card heading.
 If point is not inside a flashcard entry, an error is raised."
+  (declare (debug (body)))
   `(save-excursion
-     (org-fc-goto-entry-heading)
+     (unless (org-before-first-heading-p)
+        (org-fc-goto-entry-heading))
      ,@body))
 
 (defmacro org-fc-with-point-at-back-heading (&rest body)
   "Execute BODY with point at the card's back heading.
 If point is not inside a flashcard entry, an error is raised."
+  (declare (debug (body)))
   `(if-let ((pos (org-fc-back-heading-position)))
        (save-excursion
          (goto-char pos)
@@ -243,17 +246,28 @@ If point is not inside a flashcard entry, an error is raised."
 
 (defun org-fc-entry-p ()
   "Check if the current heading is a flashcard."
-  (member org-fc-flashcard-tag (org-get-tags nil 'local)))
+  (member org-fc-flashcard-tag (org-fc--get-tags)))
 
 (defun org-fc-suspended-entry-p ()
   "Check if the current heading is a suspended flashcard."
-  (let ((tags (org-get-tags nil 'local)))
+  (let ((tags (org-fc--get-tags)))
     (and (member org-fc-flashcard-tag tags)
          (member org-fc-suspended-tag tags))))
 
 (defun org-fc-part-of-entry-p ()
   "Check if the current heading belongs to a flashcard."
-  (member org-fc-flashcard-tag (org-get-tags nil)))
+  (member org-fc-flashcard-tag (org-fc--get-tags)))
+
+(defun org-fc-up-heading-or-point-min ()
+  "Fixed version of Org's `org-up-heading-or-point-min'."
+  (ignore-errors (org-back-to-heading t))
+  (let ((p (point)))
+    (if (< 1 (funcall outline-level))
+        (progn
+          (org-up-heading-safe)
+          (when (= (point) p)
+            (goto-char (point-min))))
+      (unless (bobp) (goto-char (point-min))))))
 
 (defun org-fc-goto-entry-heading ()
   "Move up to the parent heading marked as a flashcard."
@@ -267,17 +281,141 @@ If point is not inside a flashcard entry, an error is raised."
 
 ;;; Adding / Removing Tags
 
+(defun org-fc--get-tags ()
+  "Get tags of heading at point or the file tags if there're no local tags."
+  (if (org-before-first-heading-p)
+      org-file-tags
+    (org-get-tags nil 'local)))
+
 (defun org-fc--add-tag (tag)
   "Add TAG to the heading at point."
-  (org-set-tags
-   (cl-remove-duplicates
-    (cons tag (org-get-tags nil 'local))
-    :test #'string=)))
+  (org-with-wide-buffer
+   (if (org-before-first-heading-p)
+       (org-fc-set-keyword "FILETAGS" (org-make-tag-string
+                                       (cl-remove-duplicates
+                                        (cons tag (org-fc--get-tags)))))
+     (org-back-to-heading)
+     (org-set-tags
+      (cl-remove-duplicates
+       (cons tag (org-fc--get-tags))
+       :test #'string=)))))
 
 (defun org-fc--remove-tag (tag)
   "Add TAG to the heading at point."
-  (org-set-tags
-   (remove tag (org-get-tags nil 'local))))
+  (org-with-wide-buffer
+   (if (org-before-first-heading-p)
+       (org-fc-set-keyword "FILETAGS" (org-make-tag-string
+                                       (remove tag (org-fc--get-tags))))
+     (org-back-to-heading)
+     (org-set-tags
+      (remove tag (org-fc--get-tags))))))
+
+;;; Dealing with keywords
+;; Thank you, org-roam.
+
+(defun org-fc-set-keyword (key value)
+  "Set keyword KEY to VALUE.
+If the property is already set, it's value is replaced."
+  (org-with-point-at 1
+    (let ((case-fold-search t))
+      (if (re-search-forward (concat "^#\\+" key ":\\(.*\\)") (point-max) t)
+          (if (string-blank-p value)
+              (kill-whole-line)
+            (replace-match (concat " " value) 'fixedcase nil nil 1))
+        (org-roam-end-of-meta-data 'drawers)
+        (if (save-excursion (end-of-line) (eobp))
+            (progn
+              (end-of-line)
+              (insert "\n"))
+          (beginning-of-line))
+        (insert "#+" key ": " value "\n")))))
+
+(defun org-fc-get-keyword (name &optional file bound)
+  "Return keyword property NAME from an org FILE.
+FILE defaults to current file.
+Only scans up to BOUND bytes of the document."
+  (unless bound
+    (setq bound 1024))
+  (if file
+      (with-temp-buffer
+        (insert-file-contents file nil 0 bound)
+        (org-fc--get-keyword name))
+    (org-fc--get-keyword name bound)))
+
+(defun org-fc--get-keyword (name &optional bound)
+  "Return keyword property NAME in current buffer.
+If BOUND, scan up to BOUND bytes of the buffer."
+  (save-excursion
+    (let ((re (format "^#\\+%s:[ \t]*\\([^\n]+\\)" (upcase name))))
+      (goto-char (point-min))
+      (when (re-search-forward re bound t)
+        (buffer-substring-no-properties (match-beginning 1) (match-end 1))))))
+
+(defun org-fc-end-of-meta-data (&optional full)
+  "Like `org-end-of-meta-data', but supports file-level metadata.
+
+When FULL is non-nil but not t, skip planning information,
+properties, clocking lines and logbook drawers.
+
+When optional argument FULL is t, skip everything above, and also
+skip keywords."
+  (org-back-to-heading-or-point-min t)
+  (when (org-at-heading-p) (forward-line))
+  ;; Skip planning information.
+  (when (looking-at-p org-planning-line-re) (forward-line))
+  ;; Skip property drawer.
+  (when (looking-at org-property-drawer-re)
+    (goto-char (match-end 0))
+    (forward-line))
+  ;; When FULL is not nil, skip more.
+  (when (and full (not (org-at-heading-p)))
+    (catch 'exit
+      (let ((end (save-excursion (outline-next-heading) (point)))
+            (re (concat "[ \t]*$" "\\|" org-clock-line-re)))
+        (while (not (eobp))
+          (cond ;; Skip clock lines.
+           ((looking-at-p re) (forward-line))
+           ;; Skip logbook drawer.
+           ((looking-at-p org-logbook-drawer-re)
+            (if (re-search-forward "^[ \t]*:END:[ \t]*$" end t)
+                (forward-line)
+              (throw 'exit t)))
+           ((looking-at-p org-drawer-regexp)
+            (if (re-search-forward "^[ \t]*:END:[ \t]*$" end t)
+                (forward-line)
+              (throw 'exit t)))
+           ;; When FULL is t, skip keywords too.
+           ((and (eq full t)
+                 (looking-at-p org-keyword-regexp))
+            (forward-line))
+           (t (throw 'exit t))))))))
+
+(defun org-fc-set-keyword (key value)
+  "Set keyword KEY to VALUE.
+If the property is already set, it's value is replaced."
+  (org-with-point-at 1
+    (let ((case-fold-search t))
+      (if (re-search-forward (concat "^#\\+" key ":\\(.*\\)") (point-max) t)
+          (if (string-blank-p value)
+              (kill-whole-line)
+            (replace-match (concat " " value) 'fixedcase nil nil 1))
+        (org-fc-end-of-meta-data 'drawers)
+        (if (save-excursion (end-of-line) (eobp))
+            (progn
+              (end-of-line)
+              (insert "\n"))
+          (forward-line)
+          (beginning-of-line))
+        (insert "#+" key ": " value "\n")))))
+
+(defun org-fc-erase-keyword (keyword)
+  "Erase the line where the KEYWORD is, setting line from the top of the file."
+  (let ((case-fold-search t))
+    (org-with-point-at 1
+      (when (re-search-forward (concat "^#\\+" keyword ":") nil t)
+        (beginning-of-line)
+        (delete-region (point) (line-end-position))
+        (delete-char 1)))))
 
 ;;; Card Initialization
 
@@ -286,7 +424,7 @@ If point is not inside a flashcard entry, an error is raised."
 Should only be used by the init functions of card TYPEs."
   (if (org-fc-entry-p)
       (error "Headline is already a flashcard"))
-  (org-back-to-heading)
+  (org-back-to-heading-or-point-min t)
   (org-set-property
    org-fc-created-property
    (org-fc-timestamp-in 0))
@@ -394,7 +532,7 @@ make it bold."
               (setq end (point))
             (error "No :END: found for drawer"))
           (if (member name org-fc-drawer-whitelist)
-              (org-flag-drawer nil nil start end)
+              (org-hide-drawer-toggle 'off t)
             (org-fc-hide-region start end)))))))
 
 ;;;; Hiding Headings / Section Contents
@@ -436,16 +574,20 @@ See `org-show-set-visibility' for possible values"
   "Narrow the outline tree.
 Only parent headings of the current heading remain visible."
   (interactive)
-  (let* ((tags (org-get-tags nil 'local)))
+  (let* ((tags (org-fc--get-tags)))
     ;; Find the first heading with a :narrow: tag or the top level
     ;; ancestor of the current heading and narrow to its region
-    (save-excursion
-      (while (org-up-heading-safe))
-      (org-narrow-to-subtree)
-      (outline-hide-subtree))
-    ;; Show only the ancestors of the current card
-    (org-show-set-visibility org-fc-narrow-visibility)
-    (if (member "noheading" tags) (org-fc-hide-heading))))
+    (if (org-before-first-heading-p)
+        (narrow-to-region (point-min) (save-excursion
+                                        (org-next-visible-heading 1)
+                                        (point)))
+      (save-excursion
+        (while (org-up-heading-safe))
+        (org-narrow-to-subtree)
+        (outline-hide-subtree))
+      ;; Show only the ancestors of the current card
+      (org-show-set-visibility org-fc-narrow-visibility)
+      (if (member "noheading" tags) (org-fc-hide-heading)))))
 
 ;;; Updating Cards
 

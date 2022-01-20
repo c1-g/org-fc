@@ -73,3 +73,57 @@
       (should
        (equal (plist-get card3 :title)
               "Headline 3:not_a_tag:")))))
+
+(ert-deftest org-fc-test-index-no-heading ()
+  (let ((index (org-fc-awk-index-paths
+                (list
+                 (org-fc-test-fixture "index/test_cards_no_heading.org")))))
+    (should (eq (length index) 1))
+    (let ((card-with-heading1 (car index)))
+      (should
+       (equal (plist-get card-with-heading1 :id)
+              "b8ff9a29-781c-11ec-88e9-00d861145941"))
+      (should
+       (equal (plist-get card-with-heading1 :tags)
+              '("fc" "suspended")))
+      (should
+       (equal (plist-get card-with-heading1 :filetitle)
+              "What is Lorem Ipsum?")))))
+
+(ert-deftest org-fc-test-index-mixed ()
+  (let ((index (org-fc-awk-index-paths
+                (list
+                 (org-fc-test-fixture "index/test_cards_mixed.org")))))
+    (should (eq (length index) 3))
+    (let ((card-no-heading (car index))
+          (card-with-heading1 (cadr index))
+          (card-with-heading2 (caddr index)))
+      (should
+       (equal (plist-get card-no-heading :id)
+              "bc004718-7870-11ec-88e9-00d861145941"))
+      (should
+       (equal (plist-get card-no-heading :tags)
+              '("fc")))
+      (should
+       (equal (plist-get card-no-heading :filetitle)
+              "No Headline 1"))
+      
+      (should
+       (equal (plist-get card-with-heading1 :id)
+              "edee8940-5c9a-4c70-b1c4-f45c194c0c97"))
+      (should
+       (equal (plist-get card-with-heading1 :local-tags)
+              ":fc:tag1:"))
+      (should
+       (equal (plist-get card-with-heading1 :title)
+              "Headline 1"))
+
+      (should
+       (equal (plist-get card-with-heading2 :id)
+              "59b3b102-aebd-44ba-a1fd-6dc912c34fcf"))
+      (should
+       (equal (plist-get card-with-heading2 :local-tags)
+              ":fc:tag2:"))
+      (should
+       (equal (plist-get card-with-heading2 :title)
+              "Headline 2")))))
