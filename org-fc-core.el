@@ -575,15 +575,19 @@ See `org-show-set-visibility' for possible values"
 Only parent headings of the current heading remain visible."
   (interactive)
   (let* ((tags (org-fc--get-tags)))
-      ;; Find the first heading with a :narrow: tag or the top level
-      ;; ancestor of the current heading and narrow to its region
+    ;; Find the first heading with a :narrow: tag or the top level
+    ;; ancestor of the current heading and narrow to its region
+    (if (org-before-first-heading-p)
+        (narrow-to-region (point-min) (save-excursion
+                                        (org-next-visible-heading 1)
+                                        (point)))
       (save-excursion
         (while (org-up-heading-safe))
         (org-narrow-to-subtree)
         (outline-hide-subtree))
       ;; Show only the ancestors of the current card
       (org-show-set-visibility org-fc-narrow-visibility)
-      (if (member "noheading" tags) (org-fc-hide-heading))))
+      (if (member "noheading" tags) (org-fc-hide-heading)))))
 
 ;;; Updating Cards
 
