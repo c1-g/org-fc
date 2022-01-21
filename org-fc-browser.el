@@ -50,7 +50,7 @@ a list of vector for it."
   "Major mode for browsing flashcards created by org-fc."
   (setq-local revert-buffer-function #'org-fc-browser-revert)
   (setq tabulated-list-format
-        `[("Title" 120 nil)
+        `[("Title" 70 nil)
           ("Intrv" 8 t)
           ("Due" 20 t :read-only)
           ("Type" 10 nil)])
