@@ -174,24 +174,20 @@ a list of vector for it."
 (defun org-fc-browser-list-entries-default ()
   "Return a list with each element in the form of (CARD-ID [NUMBER TITLE INTERVAL DUE-DATE TYPE])
 from calling `org-fc-index' with `org-fc-browser-context' as its argument."
-  (let ((index (org-fc-index org-fc-browser-context))
-        res)
-    (while (progn
-             (let* ((card-plist (pop index))
-                    (positions (car (plist-get card-plist :positions))))
-               (push (list (plist-get card-plist :id)
-                           (vector (if (string-empty-p (plist-get card-plist :title))
-                                       (plist-get card-plist :filetitle)
-                                     (plist-get card-plist :title))
-                                   (number-to-string (plist-get positions :interval))
-                                   (format-time-string
-                                    "%FT%TZ"
-                                    (plist-get positions :due)
-                                    "UTC0")
-                                   (symbol-name (plist-get card-plist :type))))
-                     res)
-               index)))
-    (nreverse res)))
+  (let ((index (org-fc-index org-fc-browser-context)))
+    (mapcar (lambda (card)
+              (let* ((positions (car (plist-get card :positions))))
+                (list (plist-get card :id)
+                      (vector (if (string-empty-p (plist-get card :title))
+                                  (plist-get card :filetitle)
+                                (plist-get card :title))
+                              (number-to-string (plist-get positions :interval))
+                              (format-time-string
+                               "%FT%TZ"
+                               (plist-get positions :due)
+                               "UTC0")
+                              (symbol-name (plist-get card :type))))))
+            index)))
 
 (defun org-fc-browser-operations (op &rest args)
   (setq org-fc-browser-current-entry (tabulated-list-get-entry))
