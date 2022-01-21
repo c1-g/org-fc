@@ -61,18 +61,6 @@ BEGINFILE {
     title = "";
     parent_tags[0] = "";
     state = state_file;
-
-    print "  (" \
-        ":path " escape_string(FILENAME) \
-        " :cards (";
-}
-
-ENDFILE {
-    # On `BEGINFILE` we don't know the file's title yet so we output
-    # it once done processing the rest of the file.
-    print "  )  :title " (file_title ? escape_string(file_title) : "nil") \
-        " :filetags " escape_string(parent_tags[0]) \
-        " :file-suspended " (file_suspended ? "t" : "nil") ")"; 
 }
 
 ## File Title
@@ -161,42 +149,23 @@ $0 ~ review_data_drawer {
         if (cloze_type_property in properties)
             cloze_type = " :cloze-type " properties[cloze_type_property]
 
-        if (title) { title = escape_string(title); }
-        else if (title == "")
-        { title = escape_string(file_title); }
-        else if (file_title == "")
-        { title = "nil"; }
-
-        print "    (" \
-            ":id " escape_string(properties["ID"])  \
-            " :title " title         \
-            " :type " properties[type_property]     \
-            cloze_type                                            \
-            " :created " parse_time(properties[created_property]) \
-            " :suspended " (suspended ? "t" : "nil")   \
-            " :inherited-tags " escape_string(inherited_tags)   \
-            " :local-tags " escape_string(parent_tags[level])   \
-            " :positions (";
-
         # Card positions
         for (i = 1; i < review_index; i++) {
-            print "      (";
-            for (j = 1; j <= review_data_ncolumns; j++) {
+            print "      (" \
+                escape_string(properties["ID"])  \
+                " [" escape_string(title) ;
+            for (j = 4; j <= review_data_ncolumns; j++) {
                 col = review_data_columns[j];
                 val = review_data[i][col];
 
-                # TODO: extract values as strings, parse in Emacs when
-                # necessary.
-                if (col == "due") {
-                    val = parse_time(val);
-                } else if (col == "position") {
+                if (j == 7 || j == 9 ) {
                     val = escape_string(val);
+                    print " "  val;
                 }
-                print "        :" col " " val;
             }
-            print "      )";
+            print " " escape_string(properties[type_property])       \
+                "])";
         }
-        print "    ))";
     }
     next;
 }
