@@ -188,7 +188,17 @@ _FILTER is ignored."
                     "awk/browser-index.awk"
                     :variables (org-fc-awk--indexer-variables)))))))
     (if (string-prefix-p "(" output)
-        (read output)
+        (let ((output (read output)))
+          (with-temp-buffer
+            (insert (format "%S" output)))
+          (mapcar (lambda (entry)
+                    (let ((cols (cadr entry)))
+                      (when (string-empty-p (aref cols 0))
+                        (aset cols 0 (plist-get output :title)))
+                      (when (plist-get output :file-suspended)
+                        (aset cols 4 t))
+                      entry))
+                  (plist-get output :index)))
       (error "Org-fc shell error: %s" output))))
 
 (defun org-fc-browser-operations (op &rest args)

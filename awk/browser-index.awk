@@ -61,6 +61,15 @@ BEGINFILE {
     title = "";
     parent_tags[0] = "";
     state = state_file;
+    print ":index ("
+}
+
+ENDFILE {
+    # On `BEGINFILE` we don't know the file's title yet so we output
+    # it once done processing the rest of the file.
+    print ") :title " (file_title ? escape_string(file_title) : "nil") \
+        " :filetags " escape_string(parent_tags[0]) \
+        " :file-suspended " (file_suspended ? "t" : "nil") ")";
 }
 
 ## File Title
@@ -151,9 +160,8 @@ $0 ~ review_data_drawer {
 
         # Card positions
         for (i = 1; i < review_index; i++) {
-            print "      (" \
-                escape_string(properties["ID"])  \
-                " [" escape_string(title) ;
+            print "(" escape_string(properties["ID"]);
+            print " [" escape_string(title) ;
             for (j = 4; j <= review_data_ncolumns; j++) {
                 col = review_data_columns[j];
                 val = review_data[i][col];
@@ -164,7 +172,7 @@ $0 ~ review_data_drawer {
                 }
             }
             print " " escape_string(properties[type_property])       \
-                "])";
+                " " (suspended ? "t" : "nil") "])";
         }
     }
     next;
