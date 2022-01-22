@@ -162,11 +162,11 @@ $0 ~ review_data_drawer {
         for (i = 1; i < review_index; i++) {
             print "(" escape_string(properties["ID"]);
             print " [" escape_string(title) ;
-            for (j = 4; j <= review_data_ncolumns; j++) {
+            for (j = 0; j <= review_data_ncolumns; j++) {
                 col = review_data_columns[j];
                 val = review_data[i][col];
 
-                if (j == 7 || j == 9 ) {
+                if (j == 1 || j == 7 || j == 9) {
                     val = escape_string(val);
                     print " "  val;
                 }

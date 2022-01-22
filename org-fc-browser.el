@@ -51,6 +51,7 @@ a list of vector for it."
   (setq-local revert-buffer-function #'org-fc-browser-revert)
   (setq tabulated-list-format
         `[("Title" 70 nil)
+          ("Position" 5 nil)
           ("Intrv" 8 t)
           ("Due" 20 t :read-only)
           ("Type" 10 nil)])
@@ -82,7 +83,7 @@ a list of vector for it."
 (defun org-fc-browser-print (id cols)
   (let ((beg (point))
         (x (max tabulated-list-padding 0))
-        (suspended-p (aref cols 4))
+        (suspended-p (aref cols 5))
         (ncols (length tabulated-list-format))
         (inhibit-read-only t))
     (if (> tabulated-list-padding 0)
@@ -124,16 +125,13 @@ a list of vector for it."
                 (when (and right-align
                            (> width label-width))
                   (let ((shift (- width label-width)))
-                    (insert (propertize
-                             (make-string shift ?\s)
-                             'face
-                             'header-line
-                             'display
-                             `(space :align-to ,(+ x shift))))
+                    (insert (propertize (make-string shift ?\s)
+                                        'face 'header-line
+                                        'display `(space :align-to ,(+ x shift))))
                     (setq width (- width shift))
                     (setq x (+ x shift))))
 
-                (when (and suspended-p (or (= n 0) (= n 1)))
+                (when (and suspended-p (or (= n 0) (= n 2)))
                   (setq label (propertize label 'face '(:background "yellow" :foreground "black"))))
                 
                 (if (stringp (aref cols n))
@@ -157,17 +155,15 @@ a list of vector for it."
                   ;; No need to append any spaces if this is the last column.
                   (when not-last-col
                     (when (> pad-right 0)
-                      (insert (if (not (and suspended-p (or (= n 0) (= n 1))))
+                      (insert (if (not (and suspended-p (or (= n 0) (= n 2))))
                                   (make-string pad-right ?\s)
                                 (propertize (make-string pad-right ?\s) 'face '(:background "yellow" :foreground "black")))))
-                    (insert (if (not (and suspended-p (or (= n 0) (= n 1))))
+                    (insert (if (not (and suspended-p (or (= n 0) (= n 2))))
                                 padding-string
                                 (propertize padding-string 'face '(:background "yellow" :foreground "black"))))
                     (insert (propertize
                              ;; We need at least one space to align correctly.
-                             (make-string
-                              1
-                              ?\s)
+                             (make-string 1 ?\s)
                              'face 'header-line
                              'display `(space))))
                   (put-text-property opoint (point)
