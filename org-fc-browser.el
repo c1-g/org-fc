@@ -172,13 +172,26 @@ a list of vector for it."
      `(tabulated-list-id ,id tabulated-list-entry ,cols))))
 
 (defun org-fc-browser-list-entries-default ()
-  "Return a list with each element in the form of (CARD-ID [NUMBER TITLE INTERVAL DUE-DATE TYPE])
-from calling `org-fc-index' with `org-fc-browser-context' as its argument."
+  "Return a list with each element in the form of acceptable for `tabulated-list-entries'
+from calling `org-fc-browser--awk-index-paths' with `org-fc-browser-context' as its argument."
   (let ((org-fc-index-function #'org-fc-browser--awk-index-paths))
     (org-fc-index org-fc-browser-context)))
 
 (defun org-fc-browser--awk-index-paths (paths &optional _filter)
-  "Generate a list of vector for all cards and positions in PATHS.
+  "Call browser-index.awk to parse file in PATHS and return a plist in
+a format of
+
+(:index LIST-OF-VECTORS-OF-CARDS :title FILETITLE
+ :filetags FILETAGS :file-suspended FILE-SUSPENDED)
+
+the index will be modified in these scenarios,
+
+- When the card title string in its vector is empty, it will be replace
+with FILETITLE.
+- When FILE-SUSPENDED is non-nil, that means the whole file is suspended,
+every card in the index will be marked as suspended.
+
+Alas, this function will only return the LIST-OF-VECTORS-OF-CARDS.
 _FILTER is ignored."
   (let ((output (shell-command-to-string
                  (org-fc-awk--pipe
