@@ -33,6 +33,11 @@
   :type 'string
   :group 'org-fc)
 
+(defcustom org-fc-browser-apply-stripes t
+  "Display alternating backgrounds for each card in the browser buffer."
+  :type 'boolean
+  :group 'org-fc)
+
 (defcustom org-fc-browser-list-entries-function #'org-fc-browser-list-entries-default
   "A function which lists cards in the format proper for `tabulated-list-entries'
 
@@ -44,6 +49,15 @@ a list of vector for it."
 (defface org-fc-browser-hl-line
   '((t :weight bold :overline t :underline t))
   "Face for the header at point."
+  :group 'org-fc)
+
+(defface org-fc-browser-stripe
+  '((default :extend t)
+    (((class color) (min-colors 88) (background light))
+     :background "#f0f0f0")
+    (((class color) (min-colors 88) (background dark))
+     :background "#191a1b"))
+  "Face for alternating backgrounds in the browser buffer."
   :group 'org-fc)
 
 (define-derived-mode org-fc-browser-mode tablist-mode "org-fc browser"
@@ -66,6 +80,12 @@ a list of vector for it."
 (defvar org-fc-browser-context org-fc-context-all
   "Context of the current browser view.")
 
+(defvar-local org-fc-browser--previous-id ""
+  "The org id of previous entry in the browser buffer")
+
+(defvar-local org-fc-browser--stripe-applied nil
+  "")
+
 (defun org-fc-browser-revert (_ignore-auto _noconfirm)
   "Reload the browser."
   (interactive)
@@ -78,7 +98,9 @@ a list of vector for it."
          (inhibit-read-only t))
     (with-current-buffer buf
       (erase-buffer)
-      (tabulated-list-print t))))
+      (tabulated-list-print t)
+      (setq-local org-fc-browser--previous-id "")
+      (setq-local org-fc-browser--stripe-applied nil))))
 
 (defun org-fc-browser-print (id cols)
   (let ((beg (point))
@@ -131,9 +153,25 @@ a list of vector for it."
                     (setq width (- width shift))
                     (setq x (+ x shift))))
 
-                (when (and suspended-p (or (= n 0) (= n 2)))
-                  (setq label (propertize label 'face '(:background "yellow" :foreground "black"))))
-                
+                (when (not (string= id org-fc-browser--previous-id))
+                  (setq-local org-fc-browser--stripe-applied (not org-fc-browser--stripe-applied))
+                  (setq label (propertize label 'face '(:overline t))))
+                (when (or (= n 0) (= n 2))
+                  (if suspended-p
+                    (setq label (propertize label 'face
+                                            '(:background "yellow" :foreground "black")))
+                    (when org-fc-browser--stripe-applied
+                      (setq label (propertize label 'face
+                                              (append (mapcan (lambda (cons)
+                                                                (if (eq (cdr cons) 'unspecified)
+                                                                    nil
+                                                                  (list (car cons) (cdr cons))))
+                                                              (face-all-attributes
+                                                               'org-fc-browser-stripe
+                                                               (selected-frame)))
+                                                      (org-find-text-property-in-string 'face label)))))))
+
+
                 (if (stringp (aref cols n))
                     (insert (if (get-text-property 0 'help-echo label)
                                 label
@@ -143,24 +181,20 @@ a list of vector for it."
                                help-echo)))
                   (apply 'insert-text-button label (cdr (aref cols n))))
                 (let* ((next-x (1- (+ x pad-right width)))
-                      (padding-string (propertize
-                                       ;; We need at least one space to align correctly.
-                                       (make-string
-                                        (if (zerop (- width (min 1 width label-width)))
-                                            (- width (min 1 width label-width))
-                                          (1- (- width (min 1 width label-width))))
-                                        ?\s)
-                                       'display
-                                       `(space :align-to ,next-x))))
+                       (padding-string (propertize
+                                        ;; We need at least one space to align correctly.
+                                        (make-string
+                                         (if (zerop (- width (min 1 width label-width)))
+                                             (- width (min 1 width label-width))
+                                           (1- (- width (min 1 width label-width))))
+                                         ?\s)
+                                        'display
+                                        `(space :align-to ,next-x))))
                   ;; No need to append any spaces if this is the last column.
                   (when not-last-col
                     (when (> pad-right 0)
-                      (insert (if (not (and suspended-p (or (= n 0) (= n 2))))
-                                  (make-string pad-right ?\s)
-                                (propertize (make-string pad-right ?\s) 'face '(:background "yellow" :foreground "black")))))
-                    (insert (if (not (and suspended-p (or (= n 0) (= n 2))))
-                                padding-string
-                                (propertize padding-string 'face '(:background "yellow" :foreground "black"))))
+                      (insert (propertize (make-string pad-right ?\s) 'face (org-find-text-property-in-string 'face label))))
+                    (insert (propertize padding-string 'face (org-find-text-property-in-string 'face label)))
                     (insert (propertize
                              ;; We need at least one space to align correctly.
                              (make-string 1 ?\s)
@@ -174,7 +208,9 @@ a list of vector for it."
     ;; Ever so slightly faster than calling `put-text-property' twice.
     (add-text-properties
      beg (point)
-     `(tabulated-list-id ,id tabulated-list-entry ,cols))))
+     `(tabulated-list-id ,id tabulated-list-entry ,cols))
+    (when (not (string= id org-fc-browser--previous-id))
+      (setq-local org-fc-browser--previous-id id))))
 
 (defun org-fc-browser-list-entries-default ()
   "Return a list with each element in the form of acceptable for `tabulated-list-entries'
