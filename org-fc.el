@@ -33,6 +33,7 @@
 (require 'org-fc-algo-sm2)
 
 (require 'org-fc-review)
+(require 'org-fc-browser)
 (require 'org-fc-dashboard)
 (require 'org-fc-cache)
 

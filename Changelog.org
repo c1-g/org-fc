@@ -4,6 +4,9 @@ upcoming changes.
 
 In case a update to the org sources is needed, I'll add a changelog
 entry with updating instructions.
+** 0.3.0
+*** Added
+- A card browser built on ~tabulated-list-mode~, can be accessed by =M-x org-fc-browser=.
 ** 0.2.0
 *** Added
 - Support for a file-level flashcard, this kind of flashcard must be at
