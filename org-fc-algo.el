@@ -83,13 +83,18 @@ See `org-fc-register-algo' to see what those lists are.
 This variable should only be modified with `org-fc-register-algo'
 since there are some sanity checks in that function.")
 
-(defun org-fc-register-algo (name params rating init-fn next-fn)
+(defun org-fc-register-algo (name params rating init-fn next-fn &optional format-fn)
   "Register a new spacing algorithm
 Argument NAME: Name of the new algorithm.
-Argument PARAMS: Parameters that INIT-FN will give out.
+Argument PARAMS: The name of each parameter that INIT-FN will give out.
 Argument RATING: A list of all possible ratings.
-Argument INIT-FN: A list of initial value for PARAMS, can also be a function that returns the list.
-Argument NEXT-FN: Function that takes a RATING + all PARAMS then give out a new list of value for PARAMS."
+Argument INIT-FN: A list of initial value for PARAMS, can also be a
+function that returns the list.
+Argument NEXT-FN: Function that takes one of the RATING and PARAMS then give
+out a new list of value for PARAMS.
+Optional argument FORMAT-FN: Function that format a list of parameters
+to insert in `org-fc-review-history-file' and in the review data drawer.
+If nil, the default is formatting every parameter to a string."
   ;; Basic check, PARAMS & RATING can't be nil.
   (cond ((null params) (error "The parameters of the algorithm %s can not be nil." name))
         ((null rating) (error "The possible ratings of the algorithm %s can not be nil." name)))
@@ -113,7 +118,7 @@ Argument NEXT-FN: Function that takes a RATING + all PARAMS then give out a new 
            (error "The number of new values of %S (%d) is not equal to the number of possible parameters (%d)."
                   next-fn (length next-values) (length params)))
           
-          (t (push (list name params rating init-fn next-fn) org-fc-algos)))))
+          (t (push (list name params rating init-fn next-fn format-fn) org-fc-algos)))))
 
 (defun org-fc-algo-params (algo)
   "Get initial review data for ALGO"
