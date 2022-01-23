@@ -389,11 +389,12 @@ END is the start of the line with :END: on it."
 (defun org-fc-review-data-set (data)
   "Set the cards review data to DATA."
   (save-excursion
-    (let ((position (org-fc-review-data-position 'create)))
+    (let ((position (org-fc-review-data-position 'create))
+          (params (org-fc-algo-params (org-fc-algorithm))))
       (kill-region (car position) (cdr position))
       (goto-char (car position))
-      (insert "| position | ease | box | interval | due |\n")
-      (insert "|-|-|-|-|-|\n")
+      (insert "| " (mapconcat #'identity params "|") " |\n")
+      (insert "|-" "\n")
       (dolist (datum data)
         (insert
          "| "
