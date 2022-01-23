@@ -381,7 +381,10 @@ END is the start of the line with :END: on it."
   "Get a cards review data as a Lisp object."
   (if-let ((position (org-fc-review-data-position)))
       (org-with-point-at (car position)
-        (cddr (org-table-to-lisp)))))
+        (mapcar (lambda (datum)
+                  (mapcar (lambda (string) (substring-no-properties string))
+                          datum))
+                (cddr (org-table-to-lisp))))))
 
 (defun org-fc-review-data-set (data)
   "Set the cards review data to DATA."
