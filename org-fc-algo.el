@@ -147,7 +147,7 @@ If nil, the default is formatting every parameter to a string."
                  (funcall init-fn)
                init-fn)))))
 
-(defun org-fc-algo-next-params (algo rating &rest current-params)
+(defun org-fc-algo-next-params (algo rating current-params)
   "Get initial review data for ALGO"
   (let* ((entry (alist-get algo org-fc-algos))
          (next-fn (cl-fourth entry)))
