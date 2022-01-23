@@ -121,9 +121,9 @@ EASE, BOX and INTERVAL are the current parameters of the card."
                 (t (org-fc-algo-sm2-fuzz (* next-ease interval))))))
     (list position next-ease next-box next-interval (org-fc-timestamp-in next-interval))))
 
-(defun org-fc-algo-sm2-initial-review-data (position)
-  "Initial SM2 review data for POSITION."
-  (list position (org-fc-algo-sm2-ease-initial) 0 0
+(defun org-fc-algo-sm2-initial-review-data ()
+  "Initial SM2 review data."
+  (list "front" (org-fc-algo-sm2-ease-initial) 0 0
         (org-fc-timestamp-in 0)))
 
 (defun org-fc-algo-sm2-format-data (where position ease box interval due)
