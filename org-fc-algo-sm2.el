@@ -93,7 +93,7 @@ INTERVAL is by a random factor between `org-fc-algo-sm2-fuzz-min' and
 
 ;;;; Main Algorithm
 
-(defun org-fc-algo-sm2-next-parameters (ease box interval rating)
+(defun org-fc-algo-sm2-next-parameters (rating position ease box interval due)
   "Calculate the next parameters of a card, based on the review RATING.
 EASE, BOX and INTERVAL are the current parameters of the card."
   (let* ((intervals (org-fc-algo-sm2-intervals))
@@ -119,7 +119,7 @@ EASE, BOX and INTERVAL are the current parameters of the card."
                  (nth next-box intervals))
                 ((and (eq org-fc-algorithm 'sm2-v2) (eq rating 'hard)) (* 1.2 interval))
                 (t (org-fc-algo-sm2-fuzz (* next-ease interval))))))
-    (list next-ease next-box next-interval)))
+    (list position next-ease next-box next-interval (org-fc-timestamp-in next-interval))))
 
 (defun org-fc-algo-sm2-initial-review-data (position)
   "Initial SM2 review data for POSITION."
