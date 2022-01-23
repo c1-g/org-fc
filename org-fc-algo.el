@@ -156,6 +156,19 @@ If nil, the default is formatting every parameter to a string."
                  (apply next-fn (append (list rating) current-params))
                next-fn)))))
 
+(defun org-fc-algo-format-params (algo where params)
+  "Get initial review data for ALGO"
+  (let* ((entry (alist-get algo org-fc-algos))
+         (format-fn (cl-fifth entry)))
+    (cond ((null entry) (error "No such algorithm: %s" algo))
+          (t (if (functionp format-fn)
+                 (apply format-fn (append (list where) params))
+               (mapcar (lambda (elt)
+                         (if (stringp elt)
+                             elt
+                           (format "%s" elt)))
+                       params))))))
+
 
 (provide 'org-fc-algo)
 ;;; org-fc-algo.el ends here
