@@ -117,7 +117,7 @@ EASE, BOX and INTERVAL are the current parameters of the card."
          (next-interval
           (cond ((< next-box (length intervals))
                  (nth next-box intervals))
-                ((and (eq org-fc-algorithm 'sm2-v2) (eq rating 'hard)) (* 1.2 interval))
+                ((and (eq (org-fc-algorithm) 'sm2-v2) (eq rating 'hard)) (* 1.2 interval))
                 (t (org-fc-algo-sm2-fuzz (* next-ease interval))))))
     (list position next-ease next-box next-interval (org-fc-timestamp-in next-interval))))
 
