@@ -126,19 +126,31 @@ EASE, BOX and INTERVAL are the current parameters of the card."
   (list position (org-fc-algo-sm2-ease-initial) 0 0
         (org-fc-timestamp-in 0)))
 
+(defun org-fc-algo-sm2-format-data (where position ease box interval due)
+  (let ((formatted (list position
+                         (format "%.2f" ease)
+                         (format "%d" box)
+                         (format "%.2f" interval)
+                         due)))
+    (if (eq where 'history)
+        (butlast formatted)
+      formatted)))
+
 (org-fc-register-algo
  'sm2-v1
  '("position" "ease" "box" "interval" "due")
  '(again hard good easy)
  'org-fc-algo-sm2-initial-review-data
- 'org-fc-algo-sm2-next-parameters)
+ 'org-fc-algo-sm2-next-parameters
+ 'org-fc-algo-sm2-format-data)
 
 (org-fc-register-algo
  'sm2-v2
  '("position" "ease" "box" "interval" "due")
  '(again hard good easy)
  'org-fc-algo-sm2-initial-review-data
- 'org-fc-algo-sm2-next-parameters)
+ 'org-fc-algo-sm2-next-parameters
+ 'org-fc-algo-sm2-format-data)
 
 ;;; Footer
 
