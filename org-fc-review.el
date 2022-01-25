@@ -396,25 +396,23 @@ END is the start of the line with :END: on it."
          " |\n"))
       (org-table-align))))
 
-(defun org-fc-review-data-default (position)
-  "Default review data for position POSITION."
-  (cl-case org-fc-algorithm
-    ('sm2-v1 (org-fc-algo-sm2-initial-review-data position))
-    ('sm2-v2 (org-fc-algo-sm2-initial-review-data position))))
+(defun org-fc-review-data-default (&rest params)
+  "Override the initial function with PARAMS."
+  (append params (nthcdr (length params)
+                         (org-fc-algo-initial-params (org-fc-algorithm)))))
 
-(defun org-fc-review-data-update (positions)
-  "Update review data to POSITIONS.
+(defun org-fc-review-data-update (first-columns)
+  "Update review data to FIRST-COLUMNS.
 If a doesn't exist already, it is initialized with default
-values.  Entries in the table not contained in POSITIONS are
+values.  Entries in the table not contained in FIRST-COLUMNS are
 removed."
   (let ((old-data (org-fc-review-data-get)))
     (org-fc-review-data-set
      (mapcar
-      (lambda (pos)
-        (or
-         (assoc pos old-data #'string=)
-         (org-fc-review-data-default pos)))
-      positions))))
+      (lambda (column)
+        (or (assoc column old-data #'string=)
+            (org-fc-review-data-default column)))
+      first-columns))))
 
 ;;; Sessions
 
