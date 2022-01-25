@@ -281,7 +281,8 @@ rating the card."
    ;; don't update its review data
    (unless (member org-fc-demo-tag (org-get-tags))
      (let* ((data (org-fc-review-data-get))
-            (current (assoc position data #'string=)))
+            (current (assoc position data #'string=))
+            (algo (org-fc-algorithm)))
        (unless current
          (error "No review data found for this position"))
        (setq current (mapcar (lambda (s)
