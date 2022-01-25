@@ -42,13 +42,14 @@
        (ease :not-null)
        (box :not-null)
        (intrv :not-null)
-       (due :not-null)]
+       (date :not-null)
+       (type :not-null)
+       (tags)]
       (:foreign-key
        [node-id]
-       :references
-       nodes [id]
-       :on-delete
-       :cascade))))
+       :references nodes
+       [id]
+       :on-delete :cascade))))
   "Org fc db schemata.")
 
 (defconst org-fc-roam-db--indices
@@ -166,7 +167,9 @@ GET-DB is a function that returns connection to database."
                                    #'string-equal))
                            (file-relative-name
                             file org-roam-directory))))
-               (review-data (org-fc-review-data-get)))
+               (review-data (org-fc-review-data-get))
+               (type (org-entry-get nil org-fc-type-property))
+               (tags org-file-tags))
 
           (when (and (member org-fc-flashcard-tag org-file-tags)
                      review-data)
@@ -183,7 +186,9 @@ GET-DB is a function that returns connection to database."
                                             (string-to-number ease)
                                             (string-to-number box)
                                             (string-to-number intrv)
-                                            due)))
+                                            due
+                                            (intern type)
+                                            tags)))
                                 pos))
                       review-data))))))))
 
@@ -205,24 +210,28 @@ GET-DB is a function that returns connection to database."
                        (cl-return-from
                            org-roam-db-insert-node-data))))
            (title (org-link-display-format title))
-           (review-data (org-fc-review-data-get)))
+           (review-data (org-fc-review-data-get))
+           (type (org-entry-get nil org-fc-type-property))
+           (tags (org-get-tags)))
       (when (and (member org-fc-flashcard-tag (org-get-tags))
                  review-data)
         (org-roam-db-query
          [:insert :into review-history
                   :values $v1]
          (seq-map (lambda (pos)
-                    (mapcar (lambda (row)
-                              (cl-destructuring-bind (pos ease box intrv due)
-                                  row
-                                (vector id
-                                        (or title "")
+            (mapcar (lambda (row)
+                      (cl-destructuring-bind (pos ease box intrv due)
+                          row
+                        (vector id
+                                (or title "")
                                         pos
-                                        (string-to-number ease)
-                                        (string-to-number box)
-                                        (string-to-number intrv)
-                                        due)))
-                            pos))
+                                (string-to-number ease)
+                                (string-to-number box)
+                                (string-to-number intrv)
+                                due
+                                (intern type)
+                                tags)))
+                    pos))
                   review-data))))))
 
 (provide 'org-fc-roam)
