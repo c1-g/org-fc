@@ -195,23 +195,27 @@ GET-DB is a function that returns connection to database."
           (when (and (member org-fc-flashcard-tag org-file-tags)
                      review-data)
             (org-roam-db-query
-             [:insert :into review-history
+             [:delete :from cards
+                      :where (= node-id $s1)]
+             id)
+            (org-roam-db-query
+             [:insert :into cards
                       :values $v1]
-             (seq-map (lambda (pos)
-                        (mapcar (lambda (row)
-                                  (cl-destructuring-bind (pos ease box intrv due)
-                                      row
-                                    (vector id
-                                            (or title "")
-                                            pos
-                                            (string-to-number ease)
-                                            (string-to-number box)
-                                            (string-to-number intrv)
-                                            due
-                                            (intern type)
-                                            tags)))
-                                pos))
-                      review-data))))))))
+             (seq-map (lambda (datum)
+                        (cl-destructuring-bind (pos ease box intrv due history)
+                            (append datum (list (org-fc-awk-history-for-id id)))
+                          (vector id
+                                  (or title "")
+                                  pos
+                                  (string-to-number ease)
+                                  (string-to-number box)
+                                  (string-to-number intrv)
+                                  due
+                                  (intern type)
+                                  (length history)
+                                  (cl-count "again" history :test (lambda (rating elt)
+                                                                    (string= rating (plist-get elt :rating)))))))
+                        review-data))))))))
 
 (defun org-fc-roam-db-insert-outline-review-history ()
   "Insert outline level review history into `org-roam' database."
@@ -237,23 +241,64 @@ GET-DB is a function that returns connection to database."
       (when (and (member org-fc-flashcard-tag (org-get-tags))
                  review-data)
         (org-roam-db-query
-         [:insert :into review-history
+         [:delete :from cards
+                  :where (= node-id $s1)]
+         id)
+        (org-roam-db-query
+         [:insert :into cards
                   :values $v1]
-         (seq-map (lambda (pos)
-            (mapcar (lambda (row)
-                      (cl-destructuring-bind (pos ease box intrv due)
-                          row
-                        (vector id
-                                (or title "")
-                                        pos
-                                (string-to-number ease)
-                                (string-to-number box)
-                                (string-to-number intrv)
-                                due
-                                (intern type)
-                                tags)))
-                    pos))
+         (seq-map (lambda (datum)
+                    (cl-destructuring-bind (pos ease box intrv due)
+                        (append datum (list (org-fc-awk-history-for-id id)))
+                      (vector id
+                              (or title "")
+                              pos
+                              (string-to-number ease)
+                              (string-to-number box)
+                              (string-to-number intrv)
+                              due
+                              (intern type)
+                              (length history)
+                              (cl-count "again" history :test (lambda (rating elt)
+                                                                (string= rating (plist-get elt :rating)))))))
                   review-data))))))
+
+(defun org-fc-roam-index (_paths &optional _filter)
+  (let ((rows (org-roam-db-query
+               "SELECT
+id, title, pos, prior, ease, box, ivl, due, reps, lapses, type, '(' || group_concat(tags, ' ') || ')' as tags
+ FROM (
+SELECT
+cards.node_id as id,
+cards.title as title,
+cards.pos as pos,
+cards.prior as prior,
+cards.ease as ease,
+cards.box as box,
+cards.ivl as ivl,
+cards.due as due,
+cards.reps as reps,
+cards.lapses as lapses,
+cards.type as type,
+tags.tag as tags
+FROM cards
+LEFT JOIN tags ON tags.node_id = cards.node_id
+GROUP BY id, pos, tags)
+GROUP BY id
+ORDER BY prior")))
+    (cl-loop for row in rows
+             append (pcase-let
+                        ((`(,id ,title ,pos ,prior ,ease ,box ,ivl ,due , type ,reps ,lapses ,tags) row))
+                      `((:id ,id
+                             :title ,title
+                             :type ,type
+                             :suspended ,(not (not (member org-fc-suspended-tag tags)))
+                             :positions ((:position ,pos :prior ,prior :ease ,ease :box ,box
+                                                    :interval ,ivl :due ,(seconds-to-time due)
+                                                    :rating "Future"))
+                             :tags ,tags
+                             :path ,(org-id-find-id-file id)
+                             :filetitle ,(file-name-base (org-id-find-id-file id))))))))
 
 (provide 'org-fc-roam)
 ;;; org-fc-roam.el ends here
