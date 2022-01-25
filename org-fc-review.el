@@ -284,30 +284,24 @@ rating the card."
             (current (assoc position data #'string=)))
        (unless current
          (error "No review data found for this position"))
-       (let ((ease (string-to-number (cl-second current)))
-             (box (string-to-number (cl-third current)))
-             (interval (string-to-number (cl-fourth current))))
-         (org-fc-review-history-add
-          (list
-           (org-fc-timestamp-in 0)
-           path
-           id
-           (symbol-name algo)
-           (format "%.2f" delta)
-           (symbol-name rating)
-           position
-           (format "%.2f" ease)
-           (format "%d" box)
-           (format "%.2f" interval)))
-         (cl-destructuring-bind (next-ease next-box next-interval)
-             (org-fc-algo-sm2-next-parameters ease box interval rating)
-           (setcdr
-            current
-            (list (format "%.2f" next-ease)
-                  (number-to-string next-box)
-                  (format "%.2f" next-interval)
-                  (org-fc-timestamp-in next-interval)))
-           (org-fc-review-data-set data)))))))
+       (setq current (mapcar (lambda (s)
+                               (if (numberp (read s))
+                                   (read s)
+                                 s))
+                             current))
+       (org-fc-review-history-add
+        (append
+         (list
+          (org-fc-timestamp-in 0)
+          path
+          id
+          (symbol-name algo)
+          (format "%.2f" delta)
+          (symbol-name rating))
+         (org-fc-algo-format-params algo 'history current)))
+       (setf current (org-fc-algo-next-params algo rating current))
+       (setf current (org-fc-algo-format-params algo 'drawer current))
+       (org-fc-review-data-set data)))))
 
 (defun org-fc-review-reset ()
   "Reset the buffer to its state before the review."
