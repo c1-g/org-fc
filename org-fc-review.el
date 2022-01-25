@@ -292,7 +292,7 @@ rating the card."
            (org-fc-timestamp-in 0)
            path
            id
-           (symbol-name org-fc-algorithm)
+           (symbol-name algo)
            (format "%.2f" delta)
            (symbol-name rating)
            position
