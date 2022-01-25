@@ -292,13 +292,13 @@ rating the card."
            (org-fc-timestamp-in 0)
            path
            id
+           (symbol-name org-fc-algorithm)
+           (format "%.2f" delta)
+           (symbol-name rating)
            position
            (format "%.2f" ease)
            (format "%d" box)
-           (format "%.2f" interval)
-           (symbol-name rating)
-           (format "%.2f" delta)
-           (symbol-name org-fc-algorithm)))
+           (format "%.2f" interval)))
          (cl-destructuring-bind (next-ease next-box next-interval)
              (org-fc-algo-sm2-next-parameters ease box interval rating)
            (setcdr
