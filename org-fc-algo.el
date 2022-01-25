@@ -87,7 +87,8 @@ since there are some sanity checks in that function.")
   "Register a new spacing algorithm
 
 Argument `NAME': Name of the new algorithm.
-Argument `PARAMS': A list of the name of the parameters that INIT-FN will give out.
+Argument `PARAMS': A list of the name of the parameters that INIT-FN
+will give out. Must have a \"due\" parameter.
 Argument `RATING': A list of all possible ratings.
 Argument `INIT-FN': A list of initial value for PARAMS, can also be a
 function that returns the list.
@@ -103,7 +104,8 @@ inserted in the drawer. If nil, the default is formatting every
 parameter to a string."
   ;; Basic check, PARAMS & RATING can't be nil.
   (cond ((null params) (error "The parameters of the algorithm %s can not be nil." name))
-        ((null rating) (error "The possible ratings of the algorithm %s can not be nil." name)))
+        ((null rating) (error "The possible ratings of the algorithm %s can not be nil." name))
+        ((not (member "due" params)) (error "No \"due\" column in %S" params)))
 
   (let* ((init-values (if (functionp init-fn)
                           (funcall init-fn)
