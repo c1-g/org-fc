@@ -151,6 +151,20 @@ Return nil there is no history file."
             (read output)
           (error "Org-fc shell error: %s" output)))))
 
+(defun org-fc-awk-history-for-id (id)
+  "Return all history of ID from `org-fc-review-history-file'"
+  (if (file-exists-p org-fc-review-history-file)
+      (let ((output
+             (shell-command-to-string
+              (org-fc-awk--command
+               "awk/index_history.awk"
+               :input org-fc-review-history-file
+               :variables `(("card_id" . ,id))))))
+        (if (string-prefix-p "(" output)
+            (read output)
+          (error "Org-fc shell error: %s" output)))))
+
+
 ;;; Footer
 
 (provide 'org-fc-awk)
