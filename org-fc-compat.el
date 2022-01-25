@@ -95,6 +95,15 @@
   'org-fc-audio-set-after
   'org-fc-audio-set-after-setup "0.1.0")
 
+(unless (file-exists-p (concat org-fc-review-history-file ".bak"))
+  (let ((backup-file-name (concat org-fc-review-history-file ".bak")))
+    (copy-file org-fc-review-history-file (concat org-fc-review-history-file ".bak") t nil t t)
+    (with-temp-buffer
+      (let ((code (call-process-shell-command (concat "gawk 'BEGIN {OFS=\"\t\"}{print $1, $2, $3, $10, $9, $8, $4, $5, $6, $7}'"
+                                                      (format " %s > %s" (concat org-fc-review-history-file ".bak") org-fc-review-history-file)) nil `(,(current-buffer) t))))
+        (unless (zerop code)
+          (error (buffer-string)))))))
+
 ;;; Footer
 
 (provide 'org-fc-compat)

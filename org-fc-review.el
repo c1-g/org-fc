@@ -282,33 +282,31 @@ rating the card."
    ;; don't update its review data
    (unless (member org-fc-demo-tag (org-fc--get-tags))
      (let* ((data (org-fc-review-data-get))
-            (current (assoc position data #'string=)))
+            (current (assoc position data #'string=))
+            (algo (org-fc-algorithm))
+            new-current)
        (unless current
          (error "No review data found for this position"))
-       (let ((ease (string-to-number (cl-second current)))
-             (box (string-to-number (cl-third current)))
-             (interval (string-to-number (cl-fourth current))))
-         (org-fc-review-history-add
-          (list
-           (org-fc-timestamp-in 0)
-           path
-           id
-           position
-           (format "%.2f" ease)
-           (format "%d" box)
-           (format "%.2f" interval)
-           (symbol-name rating)
-           (format "%.2f" delta)
-           (symbol-name org-fc-algorithm)))
-         (cl-destructuring-bind (next-ease next-box next-interval)
-             (org-fc-algo-sm2-next-parameters ease box interval rating)
-           (setcdr
-            current
-            (list (format "%.2f" next-ease)
-                  (number-to-string next-box)
-                  (format "%.2f" next-interval)
-                  (org-fc-timestamp-in next-interval)))
-           (org-fc-review-data-set data)))))))
+       (setq new-current (mapcar (lambda (s)
+                                   (if (numberp (read s))
+                                       (read s)
+                                     s))
+                                 current))
+       (org-fc-review-history-add
+        (append
+         (list
+          (org-fc-timestamp-in 0)
+          path
+          id
+          (symbol-name algo)
+          (format "%.2f" delta)
+          (symbol-name rating))
+         (org-fc-algo-format-params algo 'history new-current)))
+       (setq new-current (org-fc-algo-next-params algo rating new-current))
+       (setq new-current (org-fc-algo-format-params algo 'drawer new-current))
+       (setcar current (car new-current))
+       (setcdr current (cdr new-current))
+       (org-fc-review-data-set data)))))
 
 (defun org-fc-review-reset ()
   "Reset the buffer to its state before the review."
@@ -382,16 +380,20 @@ END is the start of the line with :END: on it."
   "Get a cards review data as a Lisp object."
   (if-let ((position (org-fc-review-data-position)))
       (org-with-point-at (car position)
-        (cddr (org-table-to-lisp)))))
+        (mapcar (lambda (datum)
+                  (mapcar (lambda (string) (substring-no-properties string))
+                          datum))
+                (cddr (org-table-to-lisp))))))
 
 (defun org-fc-review-data-set (data)
   "Set the cards review data to DATA."
   (save-excursion
-    (let ((position (org-fc-review-data-position 'create)))
+    (let ((position (org-fc-review-data-position 'create))
+          (params (org-fc-algo-params (org-fc-algorithm))))
       (kill-region (car position) (cdr position))
       (goto-char (car position))
-      (insert "| position | ease | box | interval | due |\n")
-      (insert "|-|-|-|-|-|\n")
+      (insert "| " (mapconcat #'identity params "|") " |\n")
+      (insert "|-" "\n")
       (dolist (datum data)
         (insert
          "| "
@@ -399,25 +401,23 @@ END is the start of the line with :END: on it."
          " |\n"))
       (org-table-align))))
 
-(defun org-fc-review-data-default (position)
-  "Default review data for position POSITION."
-  (cl-case org-fc-algorithm
-    ('sm2-v1 (org-fc-algo-sm2-initial-review-data position))
-    ('sm2-v2 (org-fc-algo-sm2-initial-review-data position))))
+(defun org-fc-review-data-default (&rest params)
+  "Override the initial function with PARAMS."
+  (append params (nthcdr (length params)
+                         (org-fc-algo-initial-params (org-fc-algorithm)))))
 
-(defun org-fc-review-data-update (positions)
-  "Update review data to POSITIONS.
+(defun org-fc-review-data-update (first-columns)
+  "Update review data to FIRST-COLUMNS.
 If a doesn't exist already, it is initialized with default
-values.  Entries in the table not contained in POSITIONS are
+values.  Entries in the table not contained in FIRST-COLUMNS are
 removed."
   (let ((old-data (org-fc-review-data-get)))
     (org-fc-review-data-set
      (mapcar
-      (lambda (pos)
-        (or
-         (assoc pos old-data #'string=)
-         (org-fc-review-data-default pos)))
-      positions))))
+      (lambda (column)
+        (or (assoc column old-data #'string=)
+            (org-fc-review-data-default column)))
+      first-columns))))
 
 ;;; Sessions
 

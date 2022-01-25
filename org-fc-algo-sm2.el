@@ -29,49 +29,7 @@
 (require 'cl-lib)
 
 (require 'org-fc-core)
-
-(defmacro org-fc-property (symbol standard doc &rest args)
-  (let (defcustom-args property)
-    (while args
-      (let ((keyword (pop args)))
-        (unless (symbolp keyword)
-          (error "Junk in args %S" args))
-        (unless args
-          (error "Keyword %s is missing an argument" keyword))
-        (let ((value (pop args)))
-          (cl-case keyword
-            (:property (setq property value))
-            (t
-             (push value defcustom-args)
-             (push keyword defcustom-args))))))
-    (unless property
-      (error "Missing keyword :property"))
-    (let ((property-symbol (intern (concat (symbol-name symbol) "-property"))))
-      `(progn
-         (defcustom
-           ,symbol
-           ,standard
-           ,doc
-           ,@defcustom-args)
-         (defcustom
-           ,property-symbol
-           ,property
-           ,(format "Headline property for `%s'" symbol)
-           :type 'string
-           :group ,(plist-get defcustom-args :group))
-         (defun ,symbol ()
-           ,(format "Getter for `%s'" symbol)
-           (if-let ((value (org-entry-get (point) ,property-symbol t)))
-               ;; TODO: Switch on possible types
-               (read value)
-             ;; ,(case (plist-get defcustom-args :type)
-             ;;    ('string 'value)
-             ;;    ('float '(string-to-number value))
-             ;;    ('list '(read value))
-             ;;    (t (error "Unsupported property type %s"
-             ;; (plist-get defcustom-args :type)
-
-             ,symbol))))))
+(require 'org-fc-algo)
 
 ;;;; Properties
 
@@ -135,7 +93,7 @@ INTERVAL is by a random factor between `org-fc-algo-sm2-fuzz-min' and
 
 ;;;; Main Algorithm
 
-(defun org-fc-algo-sm2-next-parameters (ease box interval rating)
+(defun org-fc-algo-sm2-next-parameters (rating position ease box interval due)
   "Calculate the next parameters of a card, based on the review RATING.
 EASE, BOX and INTERVAL are the current parameters of the card."
   (let* ((intervals (org-fc-algo-sm2-intervals))
@@ -159,14 +117,40 @@ EASE, BOX and INTERVAL are the current parameters of the card."
          (next-interval
           (cond ((< next-box (length intervals))
                  (nth next-box intervals))
-                ((and (eq org-fc-algorithm 'sm2-v2) (eq rating 'hard)) (* 1.2 interval))
+                ((and (eq (org-fc-algorithm) 'sm2-v2) (eq rating 'hard)) (* 1.2 interval))
                 (t (org-fc-algo-sm2-fuzz (* next-ease interval))))))
-    (list next-ease next-box next-interval)))
+    (list position next-ease next-box next-interval (org-fc-timestamp-in next-interval))))
 
-(defun org-fc-algo-sm2-initial-review-data (position)
-  "Initial SM2 review data for POSITION."
-  (list position (org-fc-algo-sm2-ease-initial) 0 0
+(defun org-fc-algo-sm2-initial-review-data ()
+  "Initial SM2 review data."
+  (list "front" (org-fc-algo-sm2-ease-initial) 0 0
         (org-fc-timestamp-in 0)))
+
+(defun org-fc-algo-sm2-omit-due-date-in-history-file (where position ease box interval due)
+  (let ((formatted-params (list position
+                                (format "%.2f" ease)
+                                (format "%d" box)
+                                (format "%.2f" interval)
+                                due)))
+    (if (eq where 'history)
+        (butlast formatted-params)
+      formatted-params)))
+
+(org-fc-register-algo
+ 'sm2-v1
+ '("position" "ease" "box" "interval" "due")
+ '(again hard good easy)
+ 'org-fc-algo-sm2-initial-review-data
+ 'org-fc-algo-sm2-next-parameters
+ 'org-fc-algo-sm2-omit-due-date-in-history-file)
+
+(org-fc-register-algo
+ 'sm2-v2
+ '("position" "ease" "box" "interval" "due")
+ '(again hard good easy)
+ 'org-fc-algo-sm2-initial-review-data
+ 'org-fc-algo-sm2-next-parameters
+ 'org-fc-algo-sm2-omit-due-date-in-history-file)
 
 ;;; Footer
 

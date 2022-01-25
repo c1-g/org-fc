@@ -77,6 +77,11 @@ Used to generate absolute paths to the awk scripts.")
   :type 'string
   :group 'org-fc)
 
+(defcustom org-fc-algorithm-property "FC_ALGO"
+  "Property used to store the card algorithm."
+  :type 'string
+  :group 'org-fc)
+
 (defcustom org-fc-created-property "FC_CREATED"
   "Property used to store the cards creation time."
   :type 'string

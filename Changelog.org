@@ -4,6 +4,9 @@ upcoming changes.
 
 In case a update to the org sources is needed, I'll add a changelog
 entry with updating instructions.
+** 1.0.0
+*** Added
+- An algorithm api via ~org-fc-register-algo~, see its documentation for more.
 ** 0.3.0
 *** Added
 - A card browser built on ~tabulated-list-mode~, can be accessed by =M-x org-fc-browser=.
