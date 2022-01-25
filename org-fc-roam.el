@@ -35,25 +35,46 @@
 (require 'org-roam-db)
 
 (defconst org-fc-roam-db--schemata
-  '((review-history
+  '((cards
      ([(node-id :not-null)
        (title :not-null)
        (pos :not-null)
+       (prior :not-null)
        (ease :not-null)
        (box :not-null)
-       (intrv :not-null)
-       (date :not-null)
-       (type :not-null)
-       (tags)]
+       (ivl :integer :not-null)
+       (due :not-null)
+       ;; (queue :integer :not-null)
+       (reps :integer :not-null)
+       (lapses :integer :not-null)
+       (type :not-null)]
       (:foreign-key
        [node-id]
+       :references nodes
+       [id]
+       :on-delete :cascade)))
+    
+    (revlog
+     ([(cid :primary-key :not-null)
+       (pos :not-null)
+       (prior :not-null)
+       (ease :not-null)
+       (box :not-null)
+       (time :integer :not-null)
+       (ivl :integer :not-null)
+       ;; (queue :integer :not-null)
+       (rating :not-null)
+       (type :not-null)]
+      (:foreign-key
+       [cid]
        :references nodes
        [id]
        :on-delete :cascade))))
   "Org fc db schemata.")
 
 (defconst org-fc-roam-db--indices
-  '((review-history-node-id review-history [node-id]))
+  '((cards-node-id cards [node-id])
+    (revlog-cid revlog [cid]))
   "Org fc db indices.")
 
 (defvar org-fc-roam-db--initalized nil
