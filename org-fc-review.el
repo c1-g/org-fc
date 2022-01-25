@@ -282,14 +282,15 @@ rating the card."
    (unless (member org-fc-demo-tag (org-get-tags))
      (let* ((data (org-fc-review-data-get))
             (current (assoc position data #'string=))
-            (algo (org-fc-algorithm)))
+            (algo (org-fc-algorithm))
+            new-current)
        (unless current
          (error "No review data found for this position"))
-       (setq current (mapcar (lambda (s)
-                               (if (numberp (read s))
-                                   (read s)
-                                 s))
-                             current))
+       (setq new-current (mapcar (lambda (s)
+                                   (if (numberp (read s))
+                                       (read s)
+                                     s))
+                                 current))
        (org-fc-review-history-add
         (append
          (list
@@ -299,9 +300,11 @@ rating the card."
           (symbol-name algo)
           (format "%.2f" delta)
           (symbol-name rating))
-         (org-fc-algo-format-params algo 'history current)))
-       (setf current (org-fc-algo-next-params algo rating current))
-       (setf current (org-fc-algo-format-params algo 'drawer current))
+         (org-fc-algo-format-params algo 'history new-current)))
+       (setq new-current (org-fc-algo-next-params algo rating new-current))
+       (setq new-current (org-fc-algo-format-params algo 'drawer new-current))
+       (setcar current (car new-current))
+       (setcdr current (cdr new-current))
        (org-fc-review-data-set data)))))
 
 (defun org-fc-review-reset ()
