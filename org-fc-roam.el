@@ -369,14 +369,32 @@ GROUP BY id, pos)
 WHERE date(due, 'unixepoch', 'utc') <= date('now', 'localtime') AND queue = 0)
 GROUP BY id)"))
 
-(defun org-fc-roam-index (paths &optional _filter)
-  (let ((rows (org-roam-db-query
-               "SELECT
-rowid, id, title, pos, prior, ease,
-box, ivl, due, reps, lapses, type,
-'(' || group_concat(tags, ' ') || ')' as tags
-FROM (
-SELECT
+(defun org-fc-roam-index (paths &optional filter)
+  (cl-remove-if-not (or filter #'always)
+                    (if (= 1 (length paths))
+                        (org-roam-db-query
+                         "SELECT * FROM
+(SELECT
+':num', rowid,
+':id', id,
+':title', title,
+':type', type,
+':suspended', 'nil',
+':positions' || '((',
+':position', pos,
+':prior', prior,
+':ease', ease,
+':box', box,
+':interval', ivl,
+':due', '\"' || strftime('%%Y-%%m-%%dT%%H:%%M:%%SZ', due, 'unixepoch') || '\"',
+':rating', '\"' || 'Future' || '\"))',
+':tags', '(' || group_concat(tags, ' ') || ')' as tags,
+':path', path,
+':filetitle', filetitle
+FROM
+(SELECT rowid, id, title, pos, prior, ease, box, ivl, postp, due, type, queue, tags, path, filetitle
+FROM
+(SELECT
 cards.rowid as rowid,
 cards.node_id as id,
 cards.title as title,
@@ -385,32 +403,71 @@ cards.prior as prior,
 cards.ease as ease,
 cards.box as box,
 cards.ivl as ivl,
+cards.postp as postp,
 cards.due as due,
-cards.reps as reps,
-cards.lapses as lapses,
 cards.type as type,
-tags.tag as tags
+cards.queue as queue,
+tags.tag as tags,
+nodes.file as path,
+files.title as filetitle
 FROM cards
 LEFT JOIN tags ON tags.node_id = cards.node_id
-GROUP BY id, pos, tags)
-GROUP BY id, pos
-ORDER BY prior")))
-    (cl-loop for row in rows
-             append (pcase-let
-                        ((`(,rowid ,id ,title ,pos ,prior ,ease ,box
-                                    ,ivl ,due ,reps ,lapses ,type ,tags)
-                          row))
-                      `((:num ,rowid
-                         :id ,id
-                         :title ,title
-                         :type ,type
-                         :suspended ,(not (not (member org-fc-suspended-tag tags)))
-                         :positions ((:position ,pos :prior ,prior :ease ,ease :box ,box
-                                                :interval ,ivl :due ,(seconds-to-time due)
-                                                :rating "Future"))
-                         :tags ,tags
-                         :path ,(org-id-find-id-file id)
-                         :filetitle ,(file-name-base (org-id-find-id-file id))))))))
+LEFT JOIN nodes ON nodes.id = cards.node_id
+LEFT JOIN files ON files.file = nodes.file
+GROUP BY id, cards.pos, tags)
+GROUP BY id, pos)
+WHERE id IN $v1 AND date(due, 'unixepoch', 'utc') <= date('now', 'localtime') AND queue = 1
+GROUP BY id)
+ORDER BY prior" (vconcat (org-roam-with-file (car paths) t
+                           (org-element-cache-map (lambda (el)
+                                                    (when (org-fc-entry-p) (org-id-get)))
+                                                  :granularity 'element :restrict-elements '(property-drawer)))))
+                      (org-roam-db-query "SELECT * FROM
+(SELECT
+':num', rowid,
+':id', id,
+':title', title,
+':type', type,
+':suspended', 'nil',
+':positions' || '((',
+':position', pos,
+':prior', prior,
+':ease', ease,
+':box', box,
+':interval', ivl,
+':due', '\"' || strftime('%%Y-%%m-%%dT%%H:%%M:%%SZ', due, 'unixepoch') || '\"',
+':rating', '\"' || 'Future' || '\"))',
+':tags', '(' || group_concat(tags, ' ') || ')' as tags,
+':path', path,
+':filetitle', filetitle
+FROM
+(SELECT rowid, id, title, pos, prior, ease, box, ivl, postp, due, type, queue, tags, path, filetitle
+FROM
+(SELECT
+cards.rowid as rowid,
+cards.node_id as id,
+cards.title as title,
+cards.pos as pos,
+cards.prior as prior,
+cards.ease as ease,
+cards.box as box,
+cards.ivl as ivl,
+cards.postp as postp,
+cards.due as due,
+cards.type as type,
+cards.queue as queue,
+tags.tag as tags,
+nodes.file as path,
+files.title as filetitle
+FROM cards
+LEFT JOIN tags ON tags.node_id = cards.node_id
+LEFT JOIN nodes ON nodes.id = cards.node_id
+LEFT JOIN files ON files.file = nodes.file
+GROUP BY id, cards.pos, tags)
+GROUP BY id, pos)
+WHERE date(due, 'unixepoch', 'utc') <= date('now', 'localtime') AND queue = 1
+GROUP BY id)
+ORDER BY prior"))))
 
 
 
