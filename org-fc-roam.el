@@ -293,10 +293,10 @@ GET-DB is a function that returns connection to database."
                               (string-to-number box)
                               (string-to-number intrv)
                               due
-                              (intern type)
                               (length history)
                               (cl-count "again" history :test (lambda (rating elt)
-                                                                (string= rating (plist-get elt :rating)))))))
+                                                                (string= rating (plist-get elt :rating))))
+                              (intern type))))
                   review-data))))))
 
 (defun org-fc-roam-index (_paths &optional _filter)
