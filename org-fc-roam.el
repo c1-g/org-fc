@@ -30,6 +30,8 @@
 ;;; Code:
 (require 'org-fc-core)
 (require 'org-fc-review)
+(require 'org-fc-algo)
+(require 'org-fc-algo-sm2)
 
 (require 'org-roam)
 (require 'org-roam-db)
@@ -350,6 +352,9 @@ ORDER BY prior")))
                          :path ,(org-id-find-id-file id)
                          :filetitle ,(file-name-base (org-id-find-id-file id))))))))
 
+
+
+;; Roam-SM2 algorithm
 (defun org-fc-priority (&optional ease)
   "Return a float based on the content of this buffer.
 EASE will help with the computation."
@@ -362,6 +367,40 @@ EASE will help with the computation."
                 (if (zerop content)
                     100
                   content))))))
+
+(defun org-fc-roam-sm2-inital-review-data ()
+  (list "front"
+        (org-fc-priority (org-fc-algo-sm2-ease-initial))
+        (org-fc-algo-sm2-ease-initial)
+        0
+        0
+        0
+        (org-fc-timestamp-in 0)))
+
+(defun org-fc-roam-sm2-next-parameters (rating position prior ease box interval postp due)
+  (cl-destructuring-bind (position next-ease next-box next-interval next-due)
+      (org-fc-algo-sm2-next-parameters rating position ease box interval due)
+    (list position (org-fc-priority next-ease) next-ease next-box next-interval postp next-due)))
+
+(defun org-fc-roam-sm2-format-data (where position prior ease box interval postp due)
+  (let ((formatted-params (list position
+                                (format "%.3f" prior)
+                                (format "%.2f" ease)
+                                (format "%d" box)
+                                (format "%.2f" interval)
+                                (format "%d" postp)
+                                due)))
+    (if (eq where 'history)
+        (butlast formatted-params)
+      formatted-params)))
+
+(org-fc-register-algo
+ 'roam-sm2
+ '("position" "prior" "ease" "box" "interval" "postp" "due")
+ '(again hard good easy)
+ 'org-fc-roam-sm2-inital-review-data
+ 'org-fc-roam-sm2-next-parameters
+ 'org-fc-roam-sm2-format-data)
 
 
 (provide 'org-fc-roam)
