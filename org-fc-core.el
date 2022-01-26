@@ -150,6 +150,19 @@ comes after for review.")
 
 ;;; Helper Functions
 
+(defun org-fc-interleave (&rest lists)
+  "Return a new list of the first item in each list, then the second etc."
+  (when lists
+    (let (result)
+      (while (flatten-list lists)
+        (let ((list lists) (i 0) it it-index)
+          (ignore it it-index)
+          (while list
+            (setq it (pop list) it-index i i (1+ i))
+            (setq result (cons (car it) result))))
+        (setq lists (mapcar 'cdr lists)))
+      (flatten-list (nreverse result)))))
+
 (defun org-fc-member-p (path)
   "Check if PATH is member of one of the `org-fc-directories'."
   (setq path (expand-file-name path))
