@@ -350,5 +350,19 @@ ORDER BY prior")))
                          :path ,(org-id-find-id-file id)
                          :filetitle ,(file-name-base (org-id-find-id-file id))))))))
 
+(defun org-fc-priority (&optional ease)
+  "Return a float based on the content of this buffer.
+EASE will help with the computation."
+  (save-excursion
+    (let* ((content (abs (progn (org-back-to-heading-or-point-min)
+                                (org-fc-end-of-meta-data t)
+                                (- (point)
+                                   (progn (outline-next-visible-heading 1) (point)))))))
+      (* 100 (/ (float (or ease (org-fc-algo-sm2-ease-initial)))
+                (if (zerop content)
+                    100
+                  content))))))
+
+
 (provide 'org-fc-roam)
 ;;; org-fc-roam.el ends here
