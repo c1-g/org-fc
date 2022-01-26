@@ -213,7 +213,7 @@ GET-DB is a function that returns connection to database."
                                                :rating ,rating
                                                :time ,time)
                                        hist))
-                            (vector id pos prior ease box time ivl rating type)))
+                            (vector id pos prior ease box time ivl rating (intern type))))
                         history)))
             (org-roam-db-query
              [:insert :into cards
@@ -277,7 +277,7 @@ GET-DB is a function that returns connection to database."
                                            :rating ,rating
                                            :time ,time)
                                    hist))
-                        (vector id pos prior ease box time ivl rating type)))
+                        (vector id pos prior ease box time ivl rating (intern type))))
                     history)))
         (org-roam-db-query
          [:insert :into cards
@@ -301,9 +301,12 @@ GET-DB is a function that returns connection to database."
 (defun org-fc-roam-index (_paths &optional _filter)
   (let ((rows (org-roam-db-query
                "SELECT
-id, title, pos, prior, ease, box, ivl, due, reps, lapses, type, '(' || group_concat(tags, ' ') || ')' as tags
- FROM (
+rowid, id, title, pos, prior, ease,
+box, ivl, due, reps, lapses, type,
+'(' || group_concat(tags, ' ') || ')' as tags
+FROM (
 SELECT
+cards.rowid as rowid,
 cards.node_id as id,
 cards.title as title,
 cards.pos as pos,
@@ -319,21 +322,24 @@ tags.tag as tags
 FROM cards
 LEFT JOIN tags ON tags.node_id = cards.node_id
 GROUP BY id, pos, tags)
-GROUP BY id
+GROUP BY id, pos
 ORDER BY prior")))
     (cl-loop for row in rows
              append (pcase-let
-                        ((`(,id ,title ,pos ,prior ,ease ,box ,ivl ,due , type ,reps ,lapses ,tags) row))
-                      `((:id ,id
-                             :title ,title
-                             :type ,type
-                             :suspended ,(not (not (member org-fc-suspended-tag tags)))
-                             :positions ((:position ,pos :prior ,prior :ease ,ease :box ,box
-                                                    :interval ,ivl :due ,(seconds-to-time due)
-                                                    :rating "Future"))
-                             :tags ,tags
-                             :path ,(org-id-find-id-file id)
-                             :filetitle ,(file-name-base (org-id-find-id-file id))))))))
+                        ((`(,rowid ,id ,title ,pos ,prior ,ease ,box
+                                    ,ivl ,due ,reps ,lapses ,type ,tags)
+                          row))
+                      `((:num ,rowid
+                         :id ,id
+                         :title ,title
+                         :type ,type
+                         :suspended ,(not (not (member org-fc-suspended-tag tags)))
+                         :positions ((:position ,pos :prior ,prior :ease ,ease :box ,box
+                                                :interval ,ivl :due ,(seconds-to-time due)
+                                                :rating "Future"))
+                         :tags ,tags
+                         :path ,(org-id-find-id-file id)
+                         :filetitle ,(file-name-base (org-id-find-id-file id))))))))
 
 (provide 'org-fc-roam)
 ;;; org-fc-roam.el ends here
