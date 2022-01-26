@@ -237,20 +237,21 @@ FROM cards WHERE node_id = $s1" id)))
              [:insert :into cards
                       :values $v1]
              (seq-map (lambda (datum)
-                        (cl-destructuring-bind (pos ease box intrv due history)
-                            (append datum (list (org-fc-awk-history-for-id id)))
+                        (cl-destructuring-bind (pos prior ease box intrv postp due) datum
                           (vector id
-                                  (or title "")
+                                  title
                                   pos
+                                  (string-to-number prior)
                                   (string-to-number ease)
                                   (string-to-number box)
                                   (string-to-number intrv)
-                                  due
-                                  (intern type)
+                                  (string-to-number postp)
+                                  (string-to-number (format-time-string "%s" (date-to-time due)))
                                   (length history)
                                   (cl-count "again" history :test (lambda (rating elt)
-                                                                    (string= rating (plist-get elt :rating)))))))
-                        review-data))))))))
+                                                                    (string= rating (plist-get elt :rating))))
+                                  (intern type))))
+                      review-data))))))))
 
 (defun org-fc-roam-db-insert-outline-review-history ()
   "Insert outline level review history into `org-roam' database."
@@ -301,15 +302,16 @@ FROM cards WHERE node_id = $s1" id)))
          [:insert :into cards
                   :values $v1]
          (seq-map (lambda (datum)
-                    (cl-destructuring-bind (pos ease box intrv due)
-                        (append datum (list (org-fc-awk-history-for-id id)))
+                    (cl-destructuring-bind (pos prior ease box intrv postp due) datum
                       (vector id
-                              (or title "")
+                              title
                               pos
+                              (string-to-number prior)
                               (string-to-number ease)
                               (string-to-number box)
                               (string-to-number intrv)
-                              due
+                              (string-to-number postp)
+                              (string-to-number (format-time-string "%s" (date-to-time due)))
                               (length history)
                               (cl-count "again" history :test (lambda (rating elt)
                                                                 (string= rating (plist-get elt :rating))))
