@@ -221,17 +221,17 @@ FROM cards WHERE node_id = $s1" id)))
                [:insert :into revlog
                         :values $v1]
                (seq-map (lambda (hist)
-                          (pcase-let ((`(:date ,date
-                                               :path ,path
-                                               :position ,pos
-                                               :priority ,prior
-                                               :ease ,ease
-                                               :box ,box
-                                               :interval ,ivl
-                                               :rating ,rating
-                                               :time ,time)
-                                       hist))
-                            (vector id pos prior ease box time ivl rating (intern type))))
+                          (let ((params (plist-get hist :params)))
+                            (vector id
+                                    (string-to-number (plist-get hist :time))
+                                    (plist-get hist :rating)
+                                    (intern type)
+                                    (plist-get params :position)
+                                    (and (plist-get params :prior)
+                                         (string-to-number (plist-get params :prior)))
+                                    (string-to-number (plist-get params :ease))
+                                    (string-to-number (plist-get params :box))
+                                    (string-to-number (plist-get params :interval)))))
                         history)))
             (org-roam-db-query
              [:insert :into cards
@@ -285,17 +285,17 @@ FROM cards WHERE node_id = $s1" id)))
            [:insert :into revlog
                     :values $v1]
            (seq-map (lambda (hist)
-                      (pcase-let ((`(:date ,date
-                                           :path ,path
-                                           :position ,pos
-                                           :priority ,prior
-                                           :ease ,ease
-                                           :box ,box
-                                           :interval ,ivl
-                                           :rating ,rating
-                                           :time ,time)
-                                   hist))
-                        (vector id pos prior ease box time ivl rating (intern type))))
+                      (let ((params (plist-get hist :params)))
+                        (vector id
+                                (plist-get hist :time)
+                                (plist-get hist :rating)
+                                (intern type)
+                                (plist-get params :position)
+                                (and (plist-get params :prior)
+                                     (string-to-number (plist-get params :prior)))
+                                (plist-get params :ease)
+                                (plist-get params :box)
+                                (plist-get params :interval))))
                     history)))
         (org-roam-db-query
          [:insert :into cards
