@@ -153,6 +153,7 @@ Return nil there is no history file."
 
 (defun org-fc-awk-history-for-id (id)
   "Return all history of ID from `org-fc-review-history-file'"
+  (require 'org-fc-algo)
   (if (file-exists-p org-fc-review-history-file)
       (let ((output
              (shell-command-to-string
@@ -161,7 +162,14 @@ Return nil there is no history file."
                :input org-fc-review-history-file
                :variables `(("card_id" . ,id))))))
         (if (string-prefix-p "(" output)
-            (read output)
+            (mapcar (lambda (output)
+                      (let* ((params (org-fc-algo-params (read (plist-get output :algo))))
+                             (values (plist-get output :params)))
+                        (plist-put output :params
+                                   (cl-loop for k in params for v in values
+                                            append (list (intern (concat ":" k)) v)))
+                        output))
+                    (read output))
           (error "Org-fc shell error: %s" output)))))
 
 
