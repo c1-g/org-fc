@@ -41,11 +41,12 @@
      ([(node-id :not-null)
        (title :not-null)
        (pos :not-null)
-       (prior :not-null)
+       (prior :integer :not-null)
        (ease :not-null)
        (box :not-null)
        (ivl :integer :not-null)
-       (due :not-null)
+       (postp :integer :not-null)
+       (due :integer :not-null)
        ;; (queue :integer :not-null)
        (reps :integer :not-null)
        (lapses :integer :not-null)
@@ -57,15 +58,15 @@
        :on-delete :cascade)))
     (revlog
      ([(cid :not-null)
-       (pos :not-null)
-       (prior :not-null)
-       (ease :not-null)
-       (box :not-null)
        (time :integer :not-null)
-       (ivl :integer :not-null)
-       ;; (queue :integer :not-null)
        (rating :not-null)
-       (type :not-null)]
+       (type :not-null)
+       (pos :not-null)
+       (prior)
+       (ease :integer :not-null)
+       (box :integer :not-null)
+       (ivl :integer :not-null)]
+      ;; (queue :integer :not-null)
       (:foreign-key
        [cid]
        :references nodes
