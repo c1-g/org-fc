@@ -189,6 +189,7 @@ GET-DB is a function that returns connection to database."
                            (file-relative-name
                             file org-roam-directory))))
                (review-data (org-fc-review-data-get))
+               (history (org-fc-awk-history-for-id id))
                (type (org-entry-get nil org-fc-type-property))
                (tags org-file-tags))
 
@@ -198,6 +199,23 @@ GET-DB is a function that returns connection to database."
              [:delete :from cards
                       :where (= node-id $s1)]
              id)
+            (when history
+              (org-roam-db-query
+               [:insert :into revlog
+                        :values $v1]
+               (seq-map (lambda (hist)
+                          (pcase-let ((`(:date ,date
+                                               :path ,path
+                                               :position ,pos
+                                               :priority ,prior
+                                               :ease ,ease
+                                               :box ,box
+                                               :interval ,ivl
+                                               :rating ,rating
+                                               :time ,time)
+                                       hist))
+                            (vector id pos prior ease box time ivl rating type)))
+                        history)))
             (org-roam-db-query
              [:insert :into cards
                       :values $v1]
@@ -236,6 +254,7 @@ GET-DB is a function that returns connection to database."
                            org-roam-db-insert-node-data))))
            (title (org-link-display-format title))
            (review-data (org-fc-review-data-get))
+           (history (org-fc-awk-history-for-id id))
            (type (org-entry-get nil org-fc-type-property))
            (tags (org-get-tags)))
       (when (and (member org-fc-flashcard-tag (org-get-tags))
@@ -244,6 +263,23 @@ GET-DB is a function that returns connection to database."
          [:delete :from cards
                   :where (= node-id $s1)]
          id)
+        (when history
+          (org-roam-db-query
+           [:insert :into revlog
+                    :values $v1]
+           (seq-map (lambda (hist)
+                      (pcase-let ((`(:date ,date
+                                           :path ,path
+                                           :position ,pos
+                                           :priority ,prior
+                                           :ease ,ease
+                                           :box ,box
+                                           :interval ,ivl
+                                           :rating ,rating
+                                           :time ,time)
+                                   hist))
+                        (vector id pos prior ease box time ivl rating type)))
+                    history)))
         (org-roam-db-query
          [:insert :into cards
                   :values $v1]
