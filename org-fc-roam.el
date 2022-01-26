@@ -184,7 +184,7 @@ GET-DB is a function that returns connection to database."
 
 (defun org-fc-roam-db-insert-file-review-history ()
   "Insert file level review history into `org-roam' database."
-  (org-with-point-at 1
+  (org-with-point-at (point-min)
     (when (and (= (org-outline-level) 0)
                (org-roam-db-node-p))
       (when-let ((id (org-id-get)))
