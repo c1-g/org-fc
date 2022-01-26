@@ -116,6 +116,7 @@ GET-DB is a function that returns connection to database."
   (let ((enabled org-fc-roam-db-autosync-mode))
     (cond (enabled
            (setq org-fc-roam-db--initalized nil)
+           (add-hook 'org-roam-find-file-hook #'org-fc-roam-update)
            ;; attach custom schemata
            (seq-each
             (lambda (schema)
@@ -171,6 +172,14 @@ GET-DB is a function that returns connection to database."
 (defun org-fc-roam-db-autosync-toggle ()
   "Toggle status of function `org-fc-roam-db-autosync-mode'."
   (org-fc-roam-db-autosync-mode 'toggle))
+
+(defun org-fc-roam-update ()
+  (when-let* ((id (org-id-get))
+              (data (car (org-roam-db-query "SELECT pos, prior, ease, box, ivl,
+'\"' || strftime('%%Y-%%m-%%dT%%H:%%M:%%SZ', due, 'unixepoch') || '\"',
+'\"' || \"Future\" || '\"' FROM cards WHERE node_id = $s1" id))))
+    (org-fc-review-data-set data)
+    (save-buffer)))
 
 
 (defun org-fc-roam-db-insert-file-review-history ()
