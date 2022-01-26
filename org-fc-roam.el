@@ -47,10 +47,10 @@
        (ivl :integer :not-null)
        (postp :integer :not-null)
        (due :integer :not-null)
-       ;; (queue :integer :not-null)
        (reps :integer :not-null)
        (lapses :integer :not-null)
-       (type :not-null)]
+       (type :not-null)
+       (queue :integer :not-null)]
       (:foreign-key
        [node-id]
        :references nodes
@@ -233,24 +233,27 @@ FROM cards WHERE node_id = $s1" id)))
                                     (string-to-number (plist-get params :box))
                                     (string-to-number (plist-get params :interval)))))
                         history)))
-            (org-roam-db-query
-             [:insert :into cards
-                      :values $v1]
+              (org-roam-db-query
+               [:insert :into cards
+                        :values $v1]
              (seq-map (lambda (datum)
                         (cl-destructuring-bind (pos prior ease box intrv postp due) datum
-                          (vector id
-                                  title
-                                  pos
-                                  (string-to-number prior)
-                                  (string-to-number ease)
-                                  (string-to-number box)
-                                  (string-to-number intrv)
-                                  (string-to-number postp)
-                                  (string-to-number (format-time-string "%s" (date-to-time due)))
-                                  (length history)
-                                  (cl-count "again" history :test (lambda (rating elt)
-                                                                    (string= rating (plist-get elt :rating))))
-                                  (intern type))))
+                    (vector id
+                            title
+                            pos
+                            (string-to-number prior)
+                            (string-to-number ease)
+                            (string-to-number box)
+                            (string-to-number intrv)
+                            (string-to-number postp)
+                            (string-to-number (format-time-string "%s" (date-to-time due)))
+                            (length history)
+                            (cl-count "again" history :test (lambda (rating elt)
+                                                              (string= rating (plist-get elt :rating))))
+                            (intern type)
+                            (cond ((member org-fc-suspended-tag tags) -1)
+                                  ((member org-fc-pending-tag tags) 0)
+                                  (t 1)))))
                       review-data))))))))
 
 (defun org-fc-roam-db-insert-outline-review-history ()
@@ -315,10 +318,58 @@ FROM cards WHERE node_id = $s1" id)))
                               (length history)
                               (cl-count "again" history :test (lambda (rating elt)
                                                                 (string= rating (plist-get elt :rating))))
-                              (intern type))))
+                              (intern type)
+                              (cond ((member org-fc-suspended-tag tags) -1)
+                                    ((member org-fc-pending-tag tags) 0)
+                                    (t 1)))))
                   review-data))))))
 
-(defun org-fc-roam-index (_paths &optional _filter)
+(defun org-fc-roam-index-pending ()
+  (org-roam-db-query "SELECT * FROM
+(SELECT
+':num', rowid,
+':id', id,
+':title', title,
+':type', type,
+':position', pos,
+':prior', prior,
+':ease', ease,
+':box', box,
+':interval', ivl,
+':tags', '(' || group_concat(tags, ' ') || ')' as tags,
+':due', '\"' || strftime('%%Y-%%m-%%dT%%H:%%M:%%SZ', due, 'unixepoch') || '\"',
+':path', path,
+':filetitle', filetitle
+FROM
+(SELECT * FROM
+(SELECT rowid, id, title, pos, prior, ease, box, ivl, due, postp, type, queue, tags, path, filetitle
+FROM
+(SELECT
+cards.rowid as rowid,
+cards.node_id as id,
+cards.title as title,
+cards.pos as pos,
+cards.prior as prior,
+cards.ease as ease,
+cards.box as box,
+cards.ivl as ivl,
+cards.due as due,
+cards.postp as postp,
+cards.type as type,
+cards.queue as queue,
+tags.tag as tags,
+nodes.file as path,
+files.title as filetitle
+FROM cards
+LEFT JOIN tags ON tags.node_id = cards.node_id
+LEFT JOIN nodes ON nodes.id = cards.node_id
+LEFT JOIN files ON files.file = nodes.file
+GROUP BY id, cards.pos, tags)
+GROUP BY id, pos)
+WHERE date(due, 'unixepoch', 'utc') <= date('now', 'localtime') AND queue = 0)
+GROUP BY id)"))
+
+(defun org-fc-roam-index (paths &optional _filter)
   (let ((rows (org-roam-db-query
                "SELECT
 rowid, id, title, pos, prior, ease,
