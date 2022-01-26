@@ -53,9 +53,8 @@
        :references nodes
        [id]
        :on-delete :cascade)))
-    
     (revlog
-     ([(cid :primary-key :not-null)
+     ([(cid :not-null)
        (pos :not-null)
        (prior :not-null)
        (ease :not-null)
