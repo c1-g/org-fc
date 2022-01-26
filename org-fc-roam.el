@@ -417,7 +417,7 @@ LEFT JOIN files ON files.file = nodes.file
 GROUP BY id, cards.pos, tags)
 GROUP BY id, pos)
 WHERE id IN $v1 AND date(due, 'unixepoch', 'utc') <= date('now', 'localtime') AND queue = 1
-GROUP BY id)
+GROUP BY id, pos)
 ORDER BY prior" (vconcat (org-roam-with-file (car paths) t
                            (org-element-cache-map (lambda (el)
                                                     (when (org-fc-entry-p) (org-id-get)))
@@ -466,7 +466,7 @@ LEFT JOIN files ON files.file = nodes.file
 GROUP BY id, cards.pos, tags)
 GROUP BY id, pos)
 WHERE date(due, 'unixepoch', 'utc') <= date('now', 'localtime') AND queue = 1
-GROUP BY id)
+GROUP BY id, pos)
 ORDER BY prior"))))
 
 
