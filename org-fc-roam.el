@@ -259,6 +259,92 @@ FROM cards WHERE node_id = $s1" id)))
         (save-buffer)))
     (current-buffer)))
 
+(defun org-fc-roam-auto-sort ()
+  "Sort cards by their priority.
+
+When `org-fc-roam-auto-sort' is non-nil, this function will be called by
+`org-fc-roam-maybe-postpone-then-sort' when Emacs closes."
+  (org-roam-db-query [:create :table $i1 $S2]
+                     'sorted_cards
+                     (cadr (assq 'cards org-roam-db--table-schemata)))
+  (org-roam-db-query "INSERT INTO sorted_cards SELECT * FROM cards ORDER BY prior")
+  (org-roam-db-query "DROP TABLE cards")
+  (org-roam-db-query "ALTER TABLE sorted_cards RENAME TO cards"))
+
+
+(defun org-fc-roam-auto-postpone ()
+  "Postpone low-priority cards.
+
+When `org-fc-roam-auto-postpone' is non-nil, this function will be called by
+`org-fc-roam-maybe-postpone-then-sort' when Emacs closes."
+  (org-roam-db-query (org-roam-db-query [:create :table $i1 $S2]
+                                        'postponed_cards
+                                        (cadr (assq 'cards org-roam-db--table-schemata))))
+
+  (org-roam-db-query "INSERT INTO postponed_cards
+SELECT * FROM cards
+WHERE date(due, 'unixepoch', 'utc') >= date('now', 'localtime')
+ORDER BY prior")
+
+  (org-roam-db-query "INSERT INTO postponed_cards
+SELECT * FROM cards
+WHERE date(due, 'unixepoch', 'utc') < date('now', 'localtime') AND  queue = -1
+ORDER BY prior")
+
+  (org-roam-db-query "INSERT INTO postponed_cards
+SELECT * FROM cards
+WHERE date(due, 'unixepoch', 'utc') < date('now', 'localtime') AND  queue = 0")
+
+  (org-roam-db-query "INSERT INTO postponed_cards
+SELECT * FROM cards
+WHERE date(due, 'unixepoch', 'utc') < date('now', 'localtime') AND queue = 1
+ORDER BY prior
+LIMIT $s1" org-fc-roam-postpone-skip-following-number-of-cards)
+
+  (org-roam-db-query "INSERT INTO postponed_cards
+SELECT node_id, title, pos, prior, ease, box, new_ivl,
+-- Due
+CASE
+WHEN new_ivl > ivl
+THEN due + ((new_ivl - ivl) * 60 * 60 * 24)
+ELSE due + (new_ivl * 60 * 60 * 24)
+END,
+-- Postpone count
+postp + 1,
+reps,
+lapses,
+type,
+queue
+
+FROM (SELECT node_id, title, pos, prior, ease, box,
+CASE
+WHEN type = 'topic' THEN min($s3, max($s2, ivl * $s1)) 
+ELSE min($s6, max($s5, ivl * $s4))
+END AS new_ivl, ivl, due, postp, reps, lapses, type, queue
+
+FROM
+(SELECT * FROM cards
+WHERE date(due, 'unixepoch', 'utc') < date('now', 'localtime') AND queue = 1
+ORDER BY prior
+LIMIT -1 OFFSET $s7))"
+                     (cdr org-fc-roam-postpone-delay-factor)
+                     (cdr org-fc-roam-postpone-minimum-interval)
+                     (cdr org-fc-roam-postpone-maximum-interval)
+
+                     (car org-fc-roam-postpone-delay-factor)
+                     (car org-fc-roam-postpone-minimum-interval)
+                     (car org-fc-roam-postpone-maximum-interval)
+                     
+                     org-fc-roam-postpone-skip-following-number-of-cards)
+  
+  (org-roam-db-query "DROP TABLE cards")
+  (org-roam-db-query "ALTER TABLE postponed_cards RENAME TO cards"))
+
+(defun org-fc-roam-maybe-postpone-then-sort ()
+  (when org-fc-roam-auto-postpone (org-fc-roam-auto-postpone))
+  (when org-fc-roam-auto-sort (org-fc-roam-auto-sort)))
+
+(add-hook 'kill-emacs-hook 'org-fc-roam-maybe-postpone-then-sort)
 
 (defun org-fc-roam-db-insert-file-review-history ()
   "Insert file level review history into `org-roam' database."
