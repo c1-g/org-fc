@@ -19,7 +19,7 @@ id == card_id {
     print "(:date " escape_string(date)         \
         " :path " escape_string(path)           \
         " :algo " escape_string(algo) \
-        " :time " escape_string(time) \
+        " :time " time \
         " :rating " escape_string(rating) \
         " :params (";
     for (i = 7; i <= NF; i++) {

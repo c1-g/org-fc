@@ -223,7 +223,7 @@ FROM cards WHERE node_id = $s1" id)))
                (seq-map (lambda (hist)
                           (let ((params (plist-get hist :params)))
                             (vector id
-                                    (string-to-number (plist-get hist :time))
+                                    (plist-get hist :time)
                                     (plist-get hist :rating)
                                     (intern type)
                                     (plist-get params :position)
