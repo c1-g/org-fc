@@ -324,6 +324,26 @@ FROM cards WHERE node_id = $s1" id)))
                                     (t 1)))))
                   review-data))))))
 
+
+(defun org-fc-roam-review-history-add (history)
+  (let ((current-card (oref org-fc-review--session current-item)))
+    (org-roam-db-query
+     [:insert :into revlog
+              :values $v1]
+     (cl-destructuring-bind (date path id algo delta rating pos prior ease box ivl postp)
+         history
+       (vector id
+               (string-to-number delta)
+               rating
+               (plist-get current-card :type)
+               pos
+               (string-to-number prior)
+               (string-to-number ease)
+               (string-to-number box)
+               (string-to-number ivl))))))
+
+(advice-add 'org-fc-roam-review-history-add :before 'org-fc-review-history-add)
+
 (defun org-fc-roam-index-pending ()
   (org-roam-db-query "SELECT * FROM
 (SELECT
