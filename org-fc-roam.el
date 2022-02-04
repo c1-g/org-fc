@@ -36,6 +36,75 @@
 (require 'org-roam)
 (require 'org-roam-db)
 
+(defcustom org-fc-roam-auto-sort t
+  "Whether to automatically run `org-fc-roam-auto-sort' when Emacs closes."
+  :group 'org-fc
+  :type 'boolean)
+
+(defcustom org-fc-roam-auto-postpone t
+  "Whether to automatically run `org-fc-roam-auto-postpone' when Emacs closes."
+  :group 'org-fc
+  :type 'boolean)
+
+(defcustom org-fc-roam-postpone-skip-following-number-of-cards 50
+  "How many cards should be left after the Postpone.
+
+If you choose 50, Postpone will first execute a standard
+postpone procedure, and then it will postpone more, if needed,
+until only 50 cards remain un-postponed. This option is useful
+in auto-postpone if you want to ensure that you inherit no more
+than a given number of outstanding cards from prior days of
+learning."
+  :group 'org-fc
+  :type 'integer)
+
+(defcustom org-fc-roam-postpone-delay-factor '(1.2 . 1.5)
+  "How much cards should be delayed.
+
+This variable is a cons cell of (OTHER-DELAY-FACTOR . TOPIC-DELAY-FACTOR).
+with OTHER-DELAY-FACTOR being the delay factor for cards with other types
+and TOPIC-DELAY-FACTOR being the delay factor for cards with `topic' type.
+
+For example, if you choose the delay of 1.1 (10%) on a card with
+the interval of 100 days, it will be delayed by ten days, i.e.
+rescheduled to the interval of 110 days. Postpone will always
+increase intervals by no less than one day from the present day.
+This way, all items on which Postpone is executed fall out of the
+outstanding subset."
+  :group 'org-fc
+  :type '(cons (float :tag "Delay factor for other types of cards")
+               (float :tag "Delay factor for topic cards")))
+
+(defcustom org-fc-roam-postpone-maximum-interval '(50 . 100)
+  "A ceiling on the length of the delay interval.
+
+This variable is a cons cell of (OTHER-MAX-IVL . TOPIC-MAX-IVL).
+with OTHER-MAX-IVL being the maximum interval for cards with other types
+and TOPIC-MAX-IVL being the maximum interval for cards with `topic' type.
+
+For example, if you choose the delay of 1.1 on a card with
+the interval of 200 days, and the maximum interval is 5 days, the
+card will be delayed only by 5 days (instead of the 20 days
+produced by multiplying the original interval by the delay
+factor)."
+  :group 'org-fc
+  :type '(cons (integer :tag "Maximum interval for other types of cards")
+               (integer :tag "Maximum interval for topic cards")))
+
+(defcustom org-fc-roam-postpone-minimum-interval '(1 . 6)
+  "A floor on the length of the delay interval.
+
+This variable is a cons cell of (OTHER-MIN-IVL . TOPIC-MIN-IVL).
+with OTHER-MIN-IVL being the minimum interval for cards with other types
+and TOPIC-MIN-IVL being the minimum interval for cards with `topic' type.
+
+For example, if you set it to (3 . 5), cards with other types will be delayed by no
+less than 3 days, and with `topic' type, no less than 5."
+  :group 'org-fc
+  :type '(cons (integer :tag "Minimum interval for other types of cards")
+               (integer :tag "Minimum interval for topic cards")))
+
+
 (defconst org-fc-roam-db--schemata
   '((cards
      ([(node-id :not-null)
