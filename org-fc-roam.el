@@ -500,7 +500,9 @@ EASE will help with the computation."
     (list position (org-fc-priority next-ease) next-ease next-box next-interval postp next-due)))
 
 (defun org-fc-roam-sm2-format-data (where position prior ease box interval postp due)
-  (let ((formatted-params (list position
+  (let ((formatted-params (list (if (stringp position)
+                                    position
+                                  (format "%s" position)) 
                                 (format "%.3f" prior)
                                 (format "%.2f" ease)
                                 (format "%d" box)
