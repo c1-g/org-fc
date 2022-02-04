@@ -664,10 +664,10 @@ EASE will help with the computation."
   (list "front"
         (org-fc-priority (org-fc-algo-sm2-ease-initial))
         (org-fc-algo-sm2-ease-initial)
-        0
-        0
-        0
-        (org-fc-timestamp-in 0)))
+        0 0 0
+        (if (time-less-p (org-get-scheduled-time nil) (current-time))
+            (org-fc-timestamp-in 0)
+          (format-time-string "%FT%TZ" (org-get-scheduled-time nil)))))
 
 (defun org-fc-roam-sm2-next-parameters (rating position prior ease box interval postp due)
   (cl-destructuring-bind (position next-ease next-box next-interval next-due)
