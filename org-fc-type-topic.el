@@ -20,7 +20,11 @@
 
 ;;; Commentary:
 
-;; 
+;; This card type is meant to be passively read without active recall
+;; then suspended when the reading is done.
+
+;; This card type gets special treatment with the default sorting function.
+;; See the documentation of `org-fc-index-sort-cards' for more information.
 
 ;;; Code:
 (require 'org-fc-core)
