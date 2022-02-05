@@ -152,16 +152,9 @@ Does not apply to cloze single and cloze enumeration cards."
 (defcustom org-fc-topic-proportion 20
   "Proportion of topic type cards in comparision to others.
 For the default value of 20, if you have 100 cards due, the
-proportion of topic vs items is 20:80 which is in the ratio of
-1:4 which means that for every 4 item there will be 1 topic that
-comes after for review.")
-
-(defcustom org-fc-shuffled-item-proportion 80
-  "Proportion of randomized items in comparision to prioritized items.")
-
-(defcustom org-fc-shuffled-topic-proportion 80
-  "Proportion of randomized topic in comparision to prioritized topics.")
-
+proportion of topic vs other cards is 20:80 which is in the ratio
+of 1:4 which means that for every 4 cards of other types there
+will be 1 topic card that comes after for review.")
 
 ;;; Helper Functions
 
@@ -695,48 +688,6 @@ Positions are shuffled in a way that preserves the order of the
      (sort positions (lambda (a b) (> (car a) (car b)))))))
 
 ;;;; Cards sorter
-;; TODO: Documentation
-(defun org-fc--index-sort-others (index)
-  (when index
-    (let ((cards-count (length index))
-          (ratio (org-fc-ratio-simplify-round (- 100 org-fc-shuffled-item-proportion) org-fc-shuffled-item-proportion))
-          priority-index)
-      (cond ((not org-fc-shuffle-positions) (org-fc-index-positions index))
-            ((eq org-fc-shuffled-item-proportion 0) (org-fc-index-positions index))
-            ((eq org-fc-shuffled-item-proportion 100) (org-fc-index-shuffled-positions index))
-            (t (sort index org-fc-index-sort-predicate)
-               (dotimes (i (round (* cards-count
-                                         (/ (- 100 org-fc-shuffled-item-proportion)
-                                            100.0))))
-                 (push (pop (nthcdr (random (length index)) index)) priority-index))
-               (setq priority-index (org-fc-index-positions priority-index))
-               (sort priority-index (lambda (card1 card2)
-                                      (< (or (plist-get card1 :prior) 0)
-                                         (or (plist-get card2 :prior) 0))))
-               (org-fc-interleave (seq-partition priority-index (cl-first ratio))
-                                  (seq-partition (org-fc-index-shuffled-positions index)
-                                                 (cl-second ratio))))))))
-
-(defun org-fc--index-sort-topic (index)
-  (when index
-    (let ((cards-count (length index))
-          (ratio (org-fc-ratio-simplify-round (- 100 org-fc-shuffled-topic-proportion) org-fc-shuffled-topic-proportion))
-          priority-index)
-      (cond ((not org-fc-shuffle-positions) (org-fc-index-positions index))
-            ((eq org-fc-shuffled-topic-proportion 0) (org-fc-index-positions index))
-            ((eq org-fc-shuffled-topic-proportion 100) (org-fc-index-shuffled-positions index))
-            (t (sort index org-fc-index-sort-predicate)
-               (dotimes (i (round (* cards-count
-                                     (/ (- 100 org-fc-shuffled-topic-proportion)
-                                        100.0))))
-                 (push (pop (nthcdr (random (length index)) index)) priority-index))
-               (setq priority-index (org-fc-index-positions priority-index))
-               (sort priority-index (lambda (card1 card2)
-                                      (< (or (plist-get card1 :prior) 0)
-                                         (or (plist-get card2 :prior) 0))))
-               (org-fc-interleave (seq-partition priority-index (cl-first ratio))
-                                  (seq-partition (org-fc-index-shuffled-positions index)
-                                                 (cl-second ratio))))))))
 
 (defun org-fc-index-sort-cards (index)
   "Sort INDEX by interleaving topic cards with others by `org-fc-topic-proportion'
@@ -751,8 +702,8 @@ ratio from `org-fc-topic-proportion'."
         (ratio (org-fc-ratio-simplify-round (- 100 org-fc-topic-proportion) org-fc-topic-proportion))
         others topic)
 
-    (setq topic (org-fc--index-sort-topic (cdr (assq t alist))))
-    (setq others (org-fc--index-sort-others (cdr (assq nil alist))))
+    (setq topic (org-fc-index-shuffled-positions (cdr (assq t alist))))
+    (setq others (org-fc-index-shuffled-positions (cdr (assq nil alist))))
 
     (cond ((not org-fc-shuffle-positions) (org-fc-index-positions index))
           ((eq org-fc-topic-proportion 100) (append topic others))
