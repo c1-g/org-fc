@@ -739,6 +739,14 @@ Positions are shuffled in a way that preserves the order of the
                                                  (cl-second ratio))))))))
 
 (defun org-fc-index-sort-cards (index)
+  "Sort INDEX by interleaving topic cards with others by `org-fc-topic-proportion'
+
+These are the conditions:
+`org-fc-topic-proportion' is 100, topic cards will always come first.
+`org-fc-topic-proportion' is 0, cards of other types will always come first.
+`org-fc-shuffle-positions' is nil, index the cards as-is i.e. the order they appear in files.
+Else, shuffle topic cards and other cards then interleave them by the
+ratio from `org-fc-topic-proportion'."
   (let ((alist (seq-group-by (lambda (it) (eq (plist-get it :type) 'topic)) index))
         (ratio (org-fc-ratio-simplify-round (- 100 org-fc-topic-proportion) org-fc-topic-proportion))
         others topic)
