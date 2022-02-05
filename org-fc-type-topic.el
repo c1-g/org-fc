@@ -29,7 +29,7 @@
   "Mark headline as card of the topic type."
   (interactive)
   (org-fc--init-card "topic")
-  (org-fc-review-data-update '("0")))
+  (org-fc-review-data-update '("front")))
 
 (defun org-fc-type-topic-setup (_position)
   "Prepare a normal card for review."
