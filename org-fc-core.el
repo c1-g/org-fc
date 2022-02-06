@@ -70,6 +70,21 @@ Used to generate absolute paths to the awk scripts.")
   :type 'function
   :group 'org-fc)
 
+(defcustom org-fc-index-filter-function #'org-fc-index-filter-due
+  "Function used to filter cards."
+  :type 'function
+  :group 'org-fc)
+
+(defcustom org-fc-index-sort-function #'org-fc-index-sort-cards
+  "Function used to sort cards."
+  :type 'function
+  :group 'org-fc)
+
+(defcustom org-fc-index-sort-predicate #'ignore
+  "Predicate function used to sort cards."
+  :type 'function
+  :group 'org-fc)
+
 ;;;; Org Tags / Properties
 
 (defcustom org-fc-type-property "FC_TYPE"
@@ -138,7 +153,36 @@ Does not apply to cloze single and cloze enumeration cards."
   :type 'boolean
   :group 'org-fc)
 
+;;;; Sorting Parameters
+(defcustom org-fc-topic-proportion 20
+  "Proportion of topic type cards in comparision to others.
+For the default value of 20, if you have 100 cards due, the
+proportion of topic vs other cards is 20:80 which is in the ratio
+of 1:4 which means that for every 4 cards of other types there
+will be 1 topic card that comes after for review.")
+
 ;;; Helper Functions
+
+(defun org-fc-interleave (&rest lists)
+  "Return a new list of the first item in each list, then the second etc."
+  (when lists
+    (let (result)
+      (while (flatten-list lists)
+        (let ((list lists) it)
+          (while list
+            (setq it (pop list))
+            (if (not (car-safe (car it)))
+                (setq result (cons (car it) result))
+              (mapc (lambda (l)
+                      (setq result (cons l result)))
+                    (car it)))))
+        (setq lists (mapcar 'cdr lists)))
+      (delete nil (nreverse result)))))
+
+(defun org-fc-ratio-simplify-round (n1 n2)
+  (mapcar (lambda (it)
+            (round (/ it (float (min n1 n2)))))
+          (list n1 n2)))
 
 (defun org-fc-member-p (path)
   "Check if PATH is member of one of the `org-fc-directories'."
@@ -790,6 +834,30 @@ Positions are shuffled in a way that preserves the order of the
     (mapcar
      #'cdr
      (sort positions (lambda (a b) (> (car a) (car b)))))))
+
+;;;; Cards sorter
+
+(defun org-fc-index-sort-cards (index)
+  "Sort INDEX by interleaving topic cards with others by `org-fc-topic-proportion'
+
+These are the conditions:
+`org-fc-topic-proportion' is 100, topic cards will always come first.
+`org-fc-topic-proportion' is 0, cards of other types will always come first.
+`org-fc-shuffle-positions' is nil, index the cards as-is i.e. the order they appear in files.
+Else, shuffle topic cards and other cards then interleave them by the
+ratio from `org-fc-topic-proportion'."
+  (let ((alist (seq-group-by (lambda (it) (eq (plist-get it :type) 'topic)) index))
+        (ratio (org-fc-ratio-simplify-round (- 100 org-fc-topic-proportion) org-fc-topic-proportion))
+        others topic)
+
+    (setq topic (org-fc-index-shuffled-positions (cdr (assq t alist))))
+    (setq others (org-fc-index-shuffled-positions (cdr (assq nil alist))))
+
+    (cond ((not org-fc-shuffle-positions) (org-fc-index-positions index))
+          ((eq org-fc-topic-proportion 100) (append topic others))
+          ((eq org-fc-topic-proportion 0) (append others topic))
+          (t (org-fc-interleave (seq-partition others (cl-first ratio))
+                                (seq-partition topic (cl-second ratio)))))))
 
 ;;; Demo Mode
 
