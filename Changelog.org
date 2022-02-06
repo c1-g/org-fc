@@ -7,6 +7,9 @@ entry with updating instructions.
 ** 1.1.1
 *** Added
 - The ~org-fc-cloze-dwim~ command that turns active region or word under point to a cloze
+*** Renamed / Deprecated
+- ~org-fc--add-tag~ -> ~org-fc--add-tags~
+- ~org-fc--remove-tag~ -> ~org-fc--remove-tags~  
 ** 1.0.1
 *** Fixed
 - ~org-fc-awk-history-for-id~ now outputs parameters as plist
