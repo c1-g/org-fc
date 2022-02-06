@@ -436,7 +436,7 @@ Should only be used by the init functions of card TYPEs."
    (org-fc-timestamp-in 0))
   (org-set-property org-fc-type-property type)
   (org-id-get-create)
-  (org-fc--add-tag org-fc-flashcard-tag))
+  (org-fc--add-tags (list org-fc-flashcard-tag)))
 
 ;;; Card Types
 ;;;; Type Management
@@ -630,7 +630,7 @@ Other useful values are:
   "Suspend the headline at point if it is a flashcard."
   (interactive)
   (org-fc-with-point-at-entry
-   (org-fc--add-tag org-fc-suspended-tag)))
+   (org-fc--add-tags (list org-fc-suspended-tag))))
 
 ;;;###autoload
 (defun org-fc-suspend-tree ()
@@ -655,7 +655,7 @@ Other useful values are:
   "Unsuspend the headline at point.
 Checks if the headline is a suspended card first."
   (interactive)
-  (org-fc--remove-tag org-fc-suspended-tag))
+  (org-fc--remove-tags (list org-fc-suspended-tag)))
 
 ;;;###autoload
 (defun org-fc-unsuspend-tree ()
