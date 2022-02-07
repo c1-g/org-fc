@@ -104,6 +104,17 @@ less than 3 days, and with `topic' type, no less than 5."
   :type '(cons (integer :tag "Minimum interval for other types of cards")
                (integer :tag "Minimum interval for topic cards")))
 
+(defcustom org-fc-shuffled-others-proportion 80
+  "Proportion of randomized cards in comparision to prioritized cards.
+Cards are of other types than topic."
+  :group 'org-fc
+  :type 'integer)
+
+(defcustom org-fc-shuffled-topic-proportion 80
+  "Proportion of randomized topic in comparision to prioritized topics."
+  :group 'org-fc
+  :type 'integer)
+
 
 ;;; Database
 (defconst org-fc-roam-db--schemata
@@ -614,6 +625,70 @@ GROUP BY id, pos)
 WHERE date(due, 'unixepoch', 'utc') <= date('now', 'localtime') AND queue = 1
 GROUP BY id, pos)
 ORDER BY prior"))))))
+
+;;; Sorting
+
+(defun org-fc-roam-index--sort-others (index)
+  "Sort INDEX by interleaving prioritized cards with randomized cards by `org-fc-shuffled-others-proportion'."
+  (when index
+    (let ((cards-count (length index))
+          (ratio (org-fc-ratio-simplify-round (- 100 org-fc-shuffled-others-proportion) org-fc-shuffled-others-proportion))
+          priority-index)
+      (cond ((not org-fc-shuffle-positions) (org-fc-index-positions index))
+            ((eq org-fc-shuffled-others-proportion 0) (org-fc-index-positions index))
+            ((eq org-fc-shuffled-others-proportion 100) (org-fc-index-shuffled-positions index))
+            (t (sort index org-fc-index-sort-predicate)
+               (dotimes (i (round (* cards-count
+                                     (/ (- 100 org-fc-shuffled-others-proportion)
+                                        100.0))))
+                 (push (pop (nthcdr (random (length index)) index)) priority-index))
+               (setq priority-index (org-fc-index-positions priority-index))
+               (sort priority-index (lambda (card1 card2)
+                                      (< (or (plist-get card1 :prior) 0)
+                                         (or (plist-get card2 :prior) 0))))
+               (org-fc-interleave (seq-partition priority-index (cl-first ratio))
+                                  (seq-partition (org-fc-index-shuffled-positions index)
+                                                 (cl-second ratio))))))))
+
+(defun org-fc-roam-index--sort-topic (index)
+  "Sort INDEX by interleaving prioritized cards with randomized cards by `org-fc-shuffled-topic-proportion'."
+  (when index
+    (let ((cards-count (length index))
+          (ratio (org-fc-ratio-simplify-round (- 100 org-fc-shuffled-topic-proportion) org-fc-shuffled-topic-proportion))
+          priority-index)
+      (cond ((not org-fc-shuffle-positions) (org-fc-index-positions index))
+            ((eq org-fc-shuffled-topic-proportion 0) (org-fc-index-positions index))
+            ((eq org-fc-shuffled-topic-proportion 100) (org-fc-index-shuffled-positions index))
+            (t (sort index org-fc-index-sort-predicate)
+               (dotimes (i (round (* cards-count
+                                     (/ (- 100 org-fc-shuffled-topic-proportion)
+                                        100.0))))
+                 (push (pop (nthcdr (random (length index)) index)) priority-index))
+               (setq priority-index (org-fc-index-positions priority-index))
+               (sort priority-index (lambda (card1 card2)
+                                      (< (or (plist-get card1 :prior) 0)
+                                         (or (plist-get card2 :prior) 0))))
+               (org-fc-interleave (seq-partition priority-index (cl-first ratio))
+                                  (seq-partition (org-fc-index-shuffled-positions index)
+                                                 (cl-second ratio))))))))
+
+(defun org-fc-roam-index-sort-cards (index)
+  "Sort INDEX by interleaving topic cards with others like `org-fc-index-sort-cards'
+
+One difference between this and `org-fc-index-sort-cards' is that this function
+further interleave prioritized cards with randomized cards for topic and other types."
+  (let ((alist (seq-group-by (lambda (it) (eq (plist-get it :type) 'topic)) index))
+        (ratio (org-fc-ratio-simplify-round (- 100 org-fc-topic-proportion) org-fc-topic-proportion))
+        others topic)
+
+    (setq topic (org-fc-roam-index--sort-topic (cdr (assq t alist))))
+    (setq others (org-fc-roam-index--sort-others (cdr (assq nil alist))))
+
+    (cond ((not org-fc-shuffle-positions) (org-fc-index-positions index))
+          ((eq org-fc-topic-proportion 100) (append topic others))
+          ((eq org-fc-topic-proportion 0) (append others topic))
+          (t (org-fc-interleave (seq-partition others (cl-first ratio))
+                                (seq-partition topic (cl-second ratio)))))))
 
 (provide 'org-fc-roam)
 ;;; org-fc-roam.el ends here
