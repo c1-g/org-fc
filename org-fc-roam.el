@@ -30,8 +30,7 @@
 ;;; Code:
 (require 'org-fc-core)
 (require 'org-fc-review)
-(require 'org-fc-algo)
-(require 'org-fc-algo-sm2)
+(require 'org-fc-roam-sm2)
 
 (require 'org-roam)
 (require 'org-roam-db)
@@ -612,57 +611,6 @@ GROUP BY id, pos)
 WHERE date(due, 'unixepoch', 'utc') <= date('now', 'localtime') AND queue = 1
 GROUP BY id, pos)
 ORDER BY prior"))))))
-
-;; Roam-SM2 algorithm
-(defun org-fc-priority (&optional ease)
-  "Return a float based on the content of this buffer.
-EASE will help with the computation."
-  (save-excursion
-    (let* ((content (abs (progn (org-back-to-heading-or-point-min)
-                                (org-fc-end-of-meta-data t)
-                                (- (point)
-                                   (progn (outline-next-visible-heading 1) (point)))))))
-      (* 100 (/ (float (or ease (org-fc-algo-sm2-ease-initial)))
-                (if (zerop content)
-                    100
-                  content))))))
-
-(defun org-fc-roam-sm2-inital-review-data ()
-  (list "front"
-        (org-fc-priority (org-fc-algo-sm2-ease-initial))
-        (org-fc-algo-sm2-ease-initial)
-        0 0 0
-        (if (time-less-p (org-get-scheduled-time nil) (current-time))
-            (org-fc-timestamp-in 0)
-          (format-time-string "%FT%TZ" (org-get-scheduled-time nil)))))
-
-(defun org-fc-roam-sm2-next-parameters (rating position prior ease box interval postp due)
-  (cl-destructuring-bind (position next-ease next-box next-interval next-due)
-      (org-fc-algo-sm2-next-parameters rating position ease box interval due)
-    (list position (org-fc-priority next-ease) next-ease next-box next-interval postp next-due)))
-
-(defun org-fc-roam-sm2-format-data (where position prior ease box interval postp due)
-  (let ((formatted-params (list (if (stringp position)
-                                    position
-                                  (format "%s" position)) 
-                                (format "%.3f" prior)
-                                (format "%.2f" ease)
-                                (format "%d" box)
-                                (format "%.2f" interval)
-                                (format "%d" postp)
-                                due)))
-    (if (eq where 'history)
-        (butlast formatted-params)
-      formatted-params)))
-
-(org-fc-register-algo
- 'roam-sm2
- '("position" "prior" "ease" "box" "interval" "postp" "due")
- '(again hard good easy)
- 'org-fc-roam-sm2-inital-review-data
- 'org-fc-roam-sm2-next-parameters
- 'org-fc-roam-sm2-format-data)
-
 
 (provide 'org-fc-roam)
 ;;; org-fc-roam.el ends here
