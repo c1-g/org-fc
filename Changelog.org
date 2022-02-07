@@ -4,6 +4,24 @@ upcoming changes.
 
 In case a update to the org sources is needed, I'll add a changelog
 entry with updating instructions.
+** 1.2.0
+*** Added
+- The =topic= card type for cards that are meant to be passively read without active recall
+- A way to customize the method for sorting card when making a new review session
+  The order goes:
+  indexing (~org-fc-index~)
+             |
+             v
+  filtering (~org-fc-index-filter-due~)
+             |
+             v
+  sorting (~org-fc-index-sort-cards~)
+ 
+  The indexing can be customized by setting ~org-fc-index-function~, the filtering, via ~org-fc-index-filter-function~, and the sorting via ~org-fc-index-sort-function~
+  
+- ~org-fc-index-sort-cards~,  A new function to sort cards by interleaving topic cards
+  with other cards for more info see [[help:org-fc-index-sort-cards][its description]].
+  
 ** 1.1.1
 *** Added
 - The ~org-fc-cloze-dwim~ command that turns active region or word under point to a cloze
