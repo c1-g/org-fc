@@ -94,10 +94,8 @@ Valid contexts:
       (when (yes-or-no-p "Flashcards are already being reviewed. Resume? ")
         (org-fc-review-resume))
     (let* ((index (org-fc-index context))
-           (cards (org-fc-index-filter-due index)))
-      (if org-fc-shuffle-positions
-          (setq cards (org-fc-index-shuffled-positions cards))
-        (setq cards (org-fc-index-positions cards)))
+           (cards (funcall org-fc-index-filter-function index)))
+      (setq cards (funcall org-fc-index-sort-function cards))
       (if (null cards)
           (message "No cards due right now")
         (progn
@@ -199,7 +197,9 @@ same ID as the current card in the session."
         (let ((type (plist-get card :type)))
           (funcall (org-fc-type-flip-fn type))
           (run-hooks 'org-fc-after-flip-hook)
-          (org-fc-review-rate-mode)))
+          (if (eq type 'topic)
+              (org-fc-review-rate-easy)
+            (org-fc-review-rate-mode))))
     (error
      (org-fc-review-quit)
      (signal (car err) (cdr err)))))
