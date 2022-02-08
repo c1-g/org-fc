@@ -690,5 +690,27 @@ further interleave prioritized cards with randomized cards for topic and other t
           (t (org-fc-interleave (seq-partition others (cl-first ratio))
                                 (seq-partition topic (cl-second ratio)))))))
 
+;;;###autoload
+(define-minor-mode org-fc-roam-mode
+  "Minor mode for caching org-fc card data.
+
+This mode sets up several hooks to ensure the case updated when files change,
+are renamed or deleted."
+  :lighter " org-fc roam"
+  :group 'org-fc
+  :require 'org-fc
+  :global t
+  (if org-fc-roam-mode
+      (progn (customize-set-variable 'org-fc-index-function #'org-fc-roam-index)
+             (customize-set-variable 'org-fc-index-filter-function #'identity
+                                     "The index function does the filtering already so just return them as-is.")
+             (customize-set-variable 'org-fc-index-sort-function #'org-fc-roam-index-sort-cards))
+    (cl-labels ((original-value (sym)
+                                (ignore-errors
+                                  (eval (car (get sym 'standard-value))))))
+      (customize-set-variable 'org-fc-index-function (original-value 'org-fc-index-function))
+      (customize-set-variable 'org-fc-index-filter-function (original-value 'org-fc-index-filter-function))
+      (customize-set-variable 'org-fc-index-sort-function (original-value 'org-fc-index-sort-function)))))
+
 (provide 'org-fc-roam)
 ;;; org-fc-roam.el ends here
