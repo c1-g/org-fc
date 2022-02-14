@@ -160,7 +160,7 @@ Return nil there is no history file."
               (org-fc-awk--command
                "awk/index_history.awk"
                :input org-fc-review-history-file
-               :variables `(("card_id" . ,id))))))
+               :variables `(("card_id" . ,(shell-quote-argument id)))))))
         (if (string-prefix-p "(" output)
             (mapcar (lambda (output)
                       (let* ((params (org-fc-algo-params (read (plist-get output :algo))))
