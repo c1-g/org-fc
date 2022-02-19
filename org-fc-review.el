@@ -260,7 +260,10 @@ same ID as the current card in the session."
 (defun org-fc-review-suspend-card ()
   "Suspend card and proceed to next."
   (interactive)
-  (org-fc-suspend-card)
+  (if (buffer-modified-p)
+      (org-fc-suspend-card)
+    (org-fc-suspend-card)
+    (save-buffer))
   ;; Remove all other positions from review session
   (with-slots (current-item cards) org-fc-review--session
     (let ((id (plist-get current-item :id)))
