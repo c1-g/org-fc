@@ -22,6 +22,12 @@ function or_default(var, def) {
     return (var != "") ? var : def;
 }
 
+# https://unix.stackexchange.com/questions/134212/extract-file-name-from-path-in-awk-program
+function basename(file, a, n) {
+    n = split(file, a, "/")
+    return a[n]
+}
+
 # Combine two tag strings
 function combine_tags(tags1, tags2) {
     if (tags1 == "") {
