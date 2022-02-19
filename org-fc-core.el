@@ -355,10 +355,10 @@ If point is not inside a flashcard entry, an error is raised."
   (org-with-wide-buffer
    (if (org-before-first-heading-p)
        (org-fc-set-keyword "FILETAGS" (org-make-tag-string
-                                       (seq-difference tags (org-fc--get-tags) #'string=)))
+                                       (seq-difference (org-fc--get-tags) tags #'string=)))
      (org-back-to-heading)
      (org-set-tags
-      (seq-difference tags (org-fc--get-tags) #'string=)))))
+      (seq-difference (org-fc--get-tags) tags #'string=)))))
 
 ;;; Dealing with keywords
 ;; Thank you, org-roam.
