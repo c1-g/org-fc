@@ -54,6 +54,28 @@ EASE will help with the computation."
            
            (t (org-fc-timestamp-in 0))))))
 
+(defun org-fc-roam-sm2-lix-region (start end)
+  "The Lasbarhetsindex Swedish Readability test score for region in START to END.
+
+LIX is a readability test that performs well on most of the Western
+European languages. The test focuses on total words, the number of
+sentences and number of long words (more than 6 characters). A
+score is returned which gives an indication of reading ease.
+
+The LIX readability formula is as follows:
+
+LIX = A/B + (C x 100)/A, where
+
+A = Number of words
+B = Number of periods (defined by period, colon or capital first letter)
+C = Number of long words (More than 6 letters)"
+  (let ((words (how-many (rx (+ word)) start end))
+        (sentences (how-many (sentence-end) start end))
+        (long-words (how-many (rx (>= 7 word)) start end)))
+    (+ (/ words sentences)
+       (/ (* long-words 100.0)
+          words))))
+
 (defun org-fc-roam-sm2-cloze-interval (priority)
   (require 'calc)
   (let* ((min-bound (calc-eval (format "%f*%s" 0.0023 (calc-eval (format "%f^2" priority)))))
