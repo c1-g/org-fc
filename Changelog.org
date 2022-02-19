@@ -4,6 +4,9 @@ upcoming changes.
 
 In case a update to the org sources is needed, I'll add a changelog
 entry with updating instructions.
+** 1.3.0
+*** Added
+- ~org-fc--deinit-card~ for deinitializing flashcards to turn them to normal headline
 ** 1.2.0
 *** Added
 - The =topic= card type for cards that are meant to be passively read without active recall
