@@ -112,6 +112,11 @@ Used to generate absolute paths to the awk scripts.")
   :type 'string
   :group 'org-fc)
 
+(defcustom org-fc-pending-tag "pending"
+  "Tag for marking pending cards."
+  :type 'string
+  :group 'org-fc)
+
 (defcustom org-fc-flashcard-tag "fc"
   "Tag for marking headlines as flashcards."
   :type 'string

@@ -419,7 +419,9 @@ removed."
      (mapcar
       (lambda (column)
         (or (assoc column old-data #'string=)
-            (org-fc-review-data-default column)))
+            (org-fc-algo-format-params (org-fc-algorithm)
+                                       'drawer
+                                       (org-fc-review-data-default column))))
       first-columns))))
 
 ;;; Sessions
