@@ -40,13 +40,27 @@ EASE will help with the computation."
                   content))))))
 
 (defun org-fc-roam-sm2-inital-review-data ()
-  (list "front"
-        (org-fc-priority (org-fc-algo-sm2-ease-initial))
-        (org-fc-algo-sm2-ease-initial)
-        0 0 0
-        (if (time-less-p (org-get-scheduled-time nil) (current-time))
-            (org-fc-timestamp-in 0)
-          (format-time-string "%FT%TZ" (org-get-scheduled-time nil)))))
+  (let ((priority (org-fc-priority (org-fc-algo-sm2-ease-initial))))
+    (list "front"
+          priority
+          (org-fc-algo-sm2-ease-initial)
+          0 0 0
+          (cond
+           ((not (time-less-p (org-get-scheduled-time nil) (current-time)))
+            (format-time-string "%FT%TZ" (org-get-scheduled-time nil)))
+           
+           ((string= "cloze" (org-entry-get nil org-fc-type-property))
+            (org-fc-timestamp-in (org-fc-roam-sm2-cloze-interval priority)))
+           
+           (t (org-fc-timestamp-in 0))))))
+
+(defun org-fc-roam-sm2-cloze-interval (priority)
+  (require 'calc)
+  (let* ((min-bound (calc-eval (format "%f*%s" 0.0023 (calc-eval (format "%f^2" priority)))))
+         (max-bound (calc-eval (format "0.4*%f" priority))))
+    (string-to-number (calc-eval (format "%s+%f"
+                                         min-bound
+                                         (cl-random (string-to-number (calc-eval (format "%s-%s" max-bound min-bound)))))))))
 
 (defun org-fc-roam-sm2-next-parameters (rating position prior ease box interval postp due)
   (cl-destructuring-bind (position next-ease next-box next-interval next-due)
