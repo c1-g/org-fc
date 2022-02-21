@@ -30,14 +30,20 @@
   "Return a float based on the content of this buffer.
 EASE will help with the computation."
   (save-excursion
-    (let* ((content (abs (progn (org-back-to-heading-or-point-min)
-                                (org-fc-end-of-meta-data t)
-                                (- (point)
-                                   (progn (outline-next-visible-heading 1) (point)))))))
-      (* 100 (/ (float (or ease (org-fc-algo-sm2-ease-initial)))
-                (if (zerop content)
-                    100
-                  content))))))
+    (let* ((beg (progn (org-back-to-heading-or-point-min t)
+                       (org-fc-end-of-meta-data 'full)
+                       (point)))
+           (end (progn (org-forward-heading-same-level 1)
+                       (point)))
+           (text (buffer-substring beg end))
+           (diff))
+      (with-temp-buffer
+        (insert text)
+        (goto-char (point-min))
+        (flush-lines org-keyword-regexp)
+        (setq diff (org-fc-roam-sm2-lix-region (point-min) (point-max))))
+      (/ (* 10.0 (or ease (org-fc-algo-sm2-ease-initial)))
+         diff))))
 
 (defun org-fc-roam-sm2-inital-review-data ()
   (let ((priority (org-fc-priority (org-fc-algo-sm2-ease-initial))))
@@ -72,6 +78,12 @@ C = Number of long words (More than 6 letters)"
   (let ((words (how-many (rx (+ word)) start end))
         (sentences (how-many (sentence-end) start end))
         (long-words (how-many (rx (>= 7 word)) start end)))
+    ;; Prevent dividing by 0
+    (when (= words 0)
+      (setq words 1))
+    (when (= sentences 0)
+      (setq sentences 1))
+    ;; Lix = wds/sent+100*(wds >= 6 char)/wds
     (+ (/ words sentences)
        (/ (* long-words 100.0)
           words))))
