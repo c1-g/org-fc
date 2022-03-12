@@ -151,8 +151,9 @@ If RESUMING is non-nil, some parts of the buffer setup are skipped."
                 (org-fc-indent)
                 ;; Make sure the headline the card is in is expanded
                 (org-reveal)
-                (org-fc-narrow)
-                (org-fc-hide-drawers)
+                (unless (org-before-first-heading-p)
+                  (org-fc-narrow)
+                  (org-fc-hide-drawers))
                 (org-fc-hide-keyword-times)
                 (org-fc-show-latex)
                 (org-display-inline-images)
