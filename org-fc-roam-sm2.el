@@ -29,21 +29,14 @@
 (defun org-fc-roam-sm2-priority-get (&optional ease)
   "Return a float based on the content of this buffer.
 EASE will help with the computation."
-  (save-excursion
-    (let* ((beg (progn (org-back-to-heading-or-point-min t)
-                       (org-fc-end-of-meta-data 'full)
-                       (point)))
-           (end (progn (org-forward-heading-same-level 1)
-                       (point)))
-           (text (buffer-substring beg end))
-           (diff))
-      (with-temp-buffer
-        (insert text)
-        (goto-char (point-min))
-        (flush-lines org-keyword-regexp)
-        (setq diff (org-fc-roam-sm2-lix-region (point-min) (point-max))))
-      (/ (* 10.0 (or ease (org-fc-algo-sm2-ease-initial)))
-         diff))))
+  (setq ease (or ease (org-fc-algo-sm2-ease-initial)))
+  (with-current-buffer (clone-buffer)
+    (goto-char (point-min))
+    (flush-lines org-keyword-regexp)
+    (flush-lines org-property-drawer-re)
+    (flush-lines org-drawer-regexp)
+    (/ (* 40 ease)
+       (org-fc-roam-sm2-lix-region (point-min) (point-max)))))
 
 (defun org-fc-roam-sm2-inital-review-data ()
   (let ((priority (org-fc-roam-sm2-priority-get)))
