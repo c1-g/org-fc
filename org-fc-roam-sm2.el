@@ -26,7 +26,7 @@
 (require 'org-fc-algo)
 (require 'org-fc-algo-sm2)
 
-(defun org-fc-priority (&optional ease)
+(defun org-fc-roam-sm2-priority-get (&optional ease)
   "Return a float based on the content of this buffer.
 EASE will help with the computation."
   (save-excursion
@@ -46,7 +46,7 @@ EASE will help with the computation."
          diff))))
 
 (defun org-fc-roam-sm2-inital-review-data ()
-  (let ((priority (org-fc-priority (org-fc-algo-sm2-ease-initial))))
+  (let ((priority (org-fc-roam-sm2-priority-get)))
     (list "front"
           priority
           (org-fc-algo-sm2-ease-initial)
@@ -99,7 +99,7 @@ C = Number of long words (More than 6 letters)"
 (defun org-fc-roam-sm2-next-parameters (rating position prior ease box interval postp due)
   (cl-destructuring-bind (position next-ease next-box next-interval next-due)
       (org-fc-algo-sm2-next-parameters rating position ease box interval due)
-    (list position (org-fc-priority next-ease) next-ease next-box next-interval postp next-due)))
+    (list position (org-fc-roam-sm2-priority-get next-ease) next-ease next-box next-interval postp next-due)))
 
 (defun org-fc-roam-sm2-format-data (where position prior ease box interval postp due)
   (let ((formatted-params (list (if (stringp position)
