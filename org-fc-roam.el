@@ -279,9 +279,12 @@ GET-DB is a function that returns connection to database."
                (history (org-fc-awk-history-for-id id))
                (type (org-entry-get nil org-fc-type-property))
                (tags org-file-tags))
-
-          (when (and (member org-fc-flashcard-tag org-file-tags)
-                     review-data)
+          
+          (unless (f-parent-of? org-roam-dailies-directory buffer-file-name)
+            
+            (unless (member org-fc-flashcard-tag tags)
+              (org-fc-type-topic-init)
+              (save-buffer))
             (org-roam-db-query
              [:delete :from cards
                       :where (= node-id $s1)]
@@ -303,27 +306,27 @@ GET-DB is a function that returns connection to database."
                                     (string-to-number (plist-get params :box))
                                     (string-to-number (plist-get params :interval)))))
                         history)))
-              (org-roam-db-query
-               [:insert :into cards
-                        :values $v1]
+            (org-roam-db-query
+             [:insert :into cards
+                      :values $v1]
              (seq-map (lambda (datum)
                         (cl-destructuring-bind (pos prior ease box intrv postp due) datum
-                    (vector id
-                            title
-                            pos
-                            (string-to-number prior)
-                            (string-to-number ease)
-                            (string-to-number box)
-                            (string-to-number intrv)
-                            (string-to-number postp)
-                            (string-to-number (format-time-string "%s" (date-to-time due)))
-                            (length history)
-                            (cl-count "again" history :test (lambda (rating elt)
-                                                              (string= rating (plist-get elt :rating))))
-                            (intern type)
-                            (cond ((member org-fc-suspended-tag tags) -1)
-                                  ((member org-fc-pending-tag tags) 0)
-                                  (t 1)))))
+                          (vector id
+                                  title
+                                  pos
+                                  (string-to-number prior)
+                                  (string-to-number ease)
+                                  (string-to-number box)
+                                  (string-to-number intrv)
+                                  (string-to-number postp)
+                                  (string-to-number (format-time-string "%s" (date-to-time due)))
+                                  (length history)
+                                  (cl-count "again" history :test (lambda (rating elt)
+                                                                    (string= rating (plist-get elt :rating))))
+                                  (intern type)
+                                  (cond ((member org-fc-suspended-tag tags) -1)
+                                        ((member org-fc-pending-tag tags) 0)
+                                        (t 1)))))
                       review-data))))))))
 
 (defun org-fc-roam-db-insert-outline-review-history ()
@@ -348,8 +351,12 @@ GET-DB is a function that returns connection to database."
            (history (org-fc-awk-history-for-id id))
            (type (org-entry-get nil org-fc-type-property))
            (tags (org-get-tags)))
-      (when (and (member org-fc-flashcard-tag (org-get-tags))
-                 review-data)
+
+      (unless (f-parent-of? org-roam-dailies-directory buffer-file-name)
+
+        (unless (member org-fc-flashcard-tag tags)
+          (org-fc-type-topic-init)
+          (save-buffer))
         (org-roam-db-query
          [:delete :from cards
                   :where (= node-id $s1)]
