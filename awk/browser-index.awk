@@ -61,13 +61,13 @@ BEGINFILE {
     title = "";
     parent_tags[0] = "";
     state = state_file;
-    print ":index ("
+    print "(:index ("
 }
 
 ENDFILE {
     # On `BEGINFILE` we don't know the file's title yet so we output
     # it once done processing the rest of the file.
-    print ") :title " (file_title ? escape_string(file_title) : "nil") \
+    print ") :title " (file_title ? escape_string(file_title) : escape_string(basename(FILENAME))) \
         " :filetags " escape_string(parent_tags[0]) \
         " :file-suspended " (file_suspended ? "t" : "nil") ")";
 }

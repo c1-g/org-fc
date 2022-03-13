@@ -341,28 +341,29 @@ If point is not inside a flashcard entry, an error is raised."
       org-file-tags
     (org-get-tags nil 'local)))
 
-(defun org-fc--add-tag (tag)
+(defun org-fc--add-tags (tags)
   "Add TAG to the heading at point."
   (org-with-wide-buffer
    (if (org-before-first-heading-p)
        (org-fc-set-keyword "FILETAGS" (org-make-tag-string
                                        (cl-remove-duplicates
-                                        (cons tag (org-fc--get-tags)))))
+                                        (append tags (org-fc--get-tags))
+                                        :test #'string=)))
      (org-back-to-heading)
      (org-set-tags
       (cl-remove-duplicates
-       (cons tag (org-fc--get-tags))
+       (append tags (org-fc--get-tags))
        :test #'string=)))))
 
-(defun org-fc--remove-tag (tag)
+(defun org-fc--remove-tags (tags)
   "Add TAG to the heading at point."
   (org-with-wide-buffer
    (if (org-before-first-heading-p)
        (org-fc-set-keyword "FILETAGS" (org-make-tag-string
-                                       (remove tag (org-fc--get-tags))))
+                                       (seq-difference (org-fc--get-tags) tags #'string=)))
      (org-back-to-heading)
      (org-set-tags
-      (remove tag (org-fc--get-tags))))))
+      (seq-difference (org-fc--get-tags) tags #'string=)))))
 
 ;;; Dealing with keywords
 ;; Thank you, org-roam.
@@ -484,7 +485,25 @@ Should only be used by the init functions of card TYPEs."
    (org-fc-timestamp-in 0))
   (org-set-property org-fc-type-property type)
   (org-id-get-create)
-  (org-fc--add-tag org-fc-flashcard-tag))
+  (org-fc--add-tags (list org-fc-flashcard-tag)))
+
+(defun org-fc--deinit-card ()
+  "Deinitialize the current flashcard.
+
+This is the opposite of `org-fc--init-card' that is,
+remove `org-fc-created-property', remove `org-fc-type-property', remove `org-fc-review-data-drawer'
+and remove any tags related to org-fc."
+  (if (not (org-fc-entry-p))
+      (error "Headline is not a flashcard"))
+  (org-back-to-heading-or-point-min)
+  (org-delete-property org-fc-created-property)
+  (org-delete-property org-fc-type-property)
+  (org-fc--remove-tags (list org-fc-suspended-tag org-fc-flashcard-tag))
+  (let* ((data-location (org-fc-review-data-position))
+         (drawer-begin (org-with-point-at (car data-location) (forward-line -1) (point)))
+         (drawer-end (org-with-point-at (cdr data-location) (forward-line 1) (point))))
+    (delete-region drawer-begin drawer-end))
+  (save-buffer))
 
 ;;; Card Types
 ;;;; Type Management
@@ -674,7 +693,7 @@ Other useful values are:
   "Suspend the headline at point if it is a flashcard."
   (interactive)
   (org-fc-with-point-at-entry
-   (org-fc--add-tag org-fc-suspended-tag)))
+   (org-fc--add-tags (list org-fc-suspended-tag))))
 
 ;;;###autoload
 (defun org-fc-suspend-tree ()
@@ -699,7 +718,7 @@ Other useful values are:
   "Unsuspend the headline at point.
 Checks if the headline is a suspended card first."
   (interactive)
-  (org-fc--remove-tag org-fc-suspended-tag))
+  (org-fc--remove-tags (list org-fc-suspended-tag)))
 
 ;;;###autoload
 (defun org-fc-unsuspend-tree ()
