@@ -87,6 +87,15 @@
         (insert " ")))
     (put-text-property (point-min) (point-max) 'keymap map)))
 
+(defun org-fc-rater-next-button ()
+  "Interactive Wrapper for `next-button'."
+  (interactive)
+  (ignore-errors (goto-char (next-button (point)))))
+
+(defun org-fc-rater-previous-button ()
+  "Interactive Wrapper for `previous-button'."
+  (interactive)
+  (ignore-errors (goto-char (previous-button (point)))))
 
 (provide 'org-fc-rater)
 ;;; org-fc-rater.el ends here
