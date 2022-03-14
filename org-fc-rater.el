@@ -70,10 +70,22 @@
              nil
              (lambda (x y) (set-window-buffer (minibuffer-window) org-fc-rater-buffer)))))))))
 
+(defun org-fc-rater-redisplay (algo map)
   (let ((inhibit-read-only t))
-    (with-current-buffer org-fc-rater-buffer
-      (delete-region (point-min) (point-max))
-      )))
+    (read-only-mode 1)
+    (set-buffer org-fc-rater-buffer)
+    (delete-region (point-min) (point-max))
+    (dolist (rater (org-fc-algo-rating algo))
+      (let* ((label (or (plist-get rater :tag)
+                        (symbol-name (plist-get rater :rate))))
+             (width (- (/ (frame-width) (length (org-fc-algo-rating algo))) 1))
+             (offset (/ (- width (string-width label)) 2)))
+        (apply #'insert-text-button (concat (make-string offset ? ) label (make-string offset ? ))
+               (when (plist-get rater :face)
+                 (list 'face (plist-get rater :face)
+                       'action (apply-partially #'org-fc-review-rate (plist-get rater :rate)))))
+        (insert " ")))
+    (put-text-property (point-min) (point-max) 'keymap map)))
 
 
 (provide 'org-fc-rater)
