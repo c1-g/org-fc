@@ -23,9 +23,18 @@
 ;; 
 
 ;;; Code:
+(require 'org-fc-algo)
 
 (defvar org-fc-rater-buffer nil
   "The current Rater buffer, or nil.")
+
+(defvar org-fc-rater-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent
+     map (make-composed-keymap button-map org-fc-review-rate-mode-map))
+    (define-key map "\C-f" 'org-fc-rater-next-button)
+    (define-key map "\C-b" 'org-fc-rater-previous-button)
+    map))
 
 (defun org-fc-rater-setup-button ()
   (setq org-fc-rater-buffer (get-buffer-create "*Rater*"))
