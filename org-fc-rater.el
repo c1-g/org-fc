@@ -31,6 +31,9 @@
 (defvar org-fc-rater-origin-buffer nil
   "The original buffer before calling rater.")
 
+(defvar org-fc-rater-inactive-minibuffer nil
+  "The original minibuffer before calling rater.")
+
 (defvar org-fc-rater-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent
@@ -100,6 +103,17 @@
   "Interactive Wrapper for `previous-button'."
   (interactive)
   (ignore-errors (goto-char (previous-button (point)))))
+
+(defun org-fc-rater-kill-rater ()
+  (interactive)
+  (when org-fc-rater-buffer
+    (kill-buffer org-fc-rater-buffer)
+    (setq org-fc-rater-buffer nil))
+  (if org-fc-rater-inactive-minibuffer
+      (set-window-buffer (minibuffer-window) org-fc-rater-inactive-minibuffer)
+    (setq org-fc-rater-inactive-minibuffer (window-buffer (minibuffer-window))))
+  (when (window-live-p (get-buffer-window org-fc-rater-origin-buffer))
+    (select-window (get-buffer-window org-fc-rater-origin-buffer))))
 
 (provide 'org-fc-rater)
 ;;; org-fc-rater.el ends here
