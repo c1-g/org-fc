@@ -167,10 +167,9 @@ If RESUMING is non-nil, some parts of the buffer setup are skipped."
                   ;; If the card has a no-noop flip function,
                   ;; skip to rate-mode
                   (let ((flip-fn (org-fc-type-flip-fn type)))
-                    (if (or
-                         (eq step 'rate)
-                         (null flip-fn)
-                         (eq flip-fn #'org-fc-noop))
+                    (if (or (eq step 'rate)
+                            (null flip-fn)
+                            (eq flip-fn #'org-fc-noop))
                         (org-fc-review-rate-mode 1)
                       (org-fc-review-flip-mode 1)))))))
         (error
