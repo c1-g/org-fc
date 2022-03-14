@@ -145,9 +145,7 @@ If RESUMING is non-nil, some parts of the buffer setup are skipped."
                   (if buffer
                       (setq-local org-fc-reviewing-existing-buffer t)
                     (setq-local org-fc-reviewing-existing-buffer nil))
-                  (org-fc-set-header-line)
-                  (require 'org-fc-rater)
-                  (org-fc-rater-setup-button))
+                  (org-fc-set-header-line))
 
                 (goto-char (point-min))
                 (org-fc-id-goto id path)
@@ -527,7 +525,9 @@ removed."
     (org-fc-review-flip-mode -1)
     ;; Make sure we're in org mode and there is an active review session
     (unless (and (derived-mode-p 'org-mode) org-fc-review--session)
-      (org-fc-review-rate-mode -1))))
+      (org-fc-review-rate-mode -1))
+    (require 'org-fc-rater)
+    (org-fc-rater-setup-button)))
 
 (defvar org-fc-review-edit-mode-map
   (let ((map (make-sparse-keymap)))
