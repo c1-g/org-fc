@@ -129,5 +129,9 @@
   (when (window-live-p (get-buffer-window org-fc-rater-origin-buffer))
     (select-window (get-buffer-window org-fc-rater-origin-buffer))))
 
+(defun org-fc-rater-button-action (rating &rest _ignore)
+  (org-fc-rater-kill-rater)
+  (org-fc-review-rate rating))
+
 (provide 'org-fc-rater)
 ;;; org-fc-rater.el ends here
