@@ -66,14 +66,13 @@
         (org-fc-rater-redisplay algo new-local-map)
         (use-local-map new-local-map)
         (catch 'rating-done
-          (let ((org-fc-running-electric-command-loop t))
-            (Electric-command-loop
-             'rating-done
-             ;; Avoid `noprompt' due to
-             ;; a bug in electric.el.
-             (lambda () 'noprompt)
-             nil
-             (lambda (x y) (set-window-buffer (minibuffer-window) org-fc-rater-buffer)))))))))
+          (Electric-command-loop
+           'rating-done
+           ;; Avoid `noprompt' due to
+           ;; a bug in electric.el.
+           (lambda () 'noprompt)
+           t
+           (lambda (x y) (when org-fc-rater-buffer (set-window-buffer (minibuffer-window) org-fc-rater-buffer)))))))))
 
 (defun org-fc-rater-redisplay (algo map)
   (let ((inhibit-read-only t))
