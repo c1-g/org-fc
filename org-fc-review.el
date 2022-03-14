@@ -498,7 +498,9 @@ removed."
     ;; Make sure only one of the modes is active at a time
     (org-fc-review-rate-mode -1)
     ;; Make sure we're in org mode and there is an active review session
-    (unless (and (derived-mode-p 'org-mode) org-fc-review--session)
+    (if (and (derived-mode-p 'org-mode) org-fc-review--session)
+        (progn (require 'org-fc-rater)
+               (org-fc-rater-kill-rater))
       (org-fc-review-flip-mode -1))))
 
 ;;;;; Rate Mode
