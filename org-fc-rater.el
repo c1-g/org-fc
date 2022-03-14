@@ -38,19 +38,38 @@
 
 (defun org-fc-rater-setup-button ()
   (setq org-fc-rater-buffer (get-buffer-create "*Rater*"))
-  (unwind-protect
-      (save-window-excursion
-        (require 'electric) (message nil)
-        (let ((echo-keystrokes 0)
-              (garbage-collection-messages nil))
-          (set-window-buffer (minibuffer-window) org-fc-rater-buffer)
-          (select-window (minibuffer-window))
-          (org-fc-rater-redisplay)))
-    (when org-fc-rater-buffer
-      (kill-buffer org-fc-rater-buffer)
-      (setq org-fc-rater-buffer nil))))
+  (save-window-excursion
+    (message nil)
+    (let ((echo-keystrokes 0)
+          (garbage-collection-messages nil)
+          (algo (org-fc-algorithm)))
+      (set-window-buffer (minibuffer-window) org-fc-rater-buffer)
+      (select-window (minibuffer-window))
+      (let ((new-local-map (make-sparse-keymap)))
+        (set-keymap-parent new-local-map org-fc-rater-map)
+        (if (seq-find (lambda (rater)
+                        (not (plist-get rater :key)))
+                      (org-fc-algo-rating algo))
+            (seq-map-indexed (lambda (rater i)
+                               (define-key new-local-map (number-to-string i)
+                                 (apply-partially #'org-fc-review-rate (plist-get rater :rate))))
+                             (org-fc-algo-rating algo))
+          (seq-map (lambda (rater)
+                     (define-key new-local-map (plist-get rater :key)
+                       (apply-partially #'org-fc-review-rate (plist-get rater :rate))))
+                   (org-fc-algo-rating algo)))
+        (org-fc-rater-redisplay algo new-local-map)
+        (use-local-map new-local-map)
+        (catch 'rating-done
+          (let ((org-fc-running-electric-command-loop t))
+            (Electric-command-loop
+             'rating-done
+             ;; Avoid `noprompt' due to
+             ;; a bug in electric.el.
+             (lambda () 'noprompt)
+             nil
+             (lambda (x y) (set-window-buffer (minibuffer-window) org-fc-rater-buffer)))))))))
 
-(defun org-fc-rater-redisplay ()
   (let ((inhibit-read-only t))
     (with-current-buffer org-fc-rater-buffer
       (delete-region (point-min) (point-max))
