@@ -525,10 +525,9 @@ removed."
     ;; Make sure only one of the modes is active at a time
     (org-fc-review-flip-mode -1)
     ;; Make sure we're in org mode and there is an active review session
-    (unless (and (derived-mode-p 'org-mode) org-fc-review--session)
-      (org-fc-review-rate-mode -1))
-    (require 'org-fc-rater)
-    (org-fc-rater-setup-button)))
+    (if (and (derived-mode-p 'org-mode) org-fc-review--session)
+        (org-fc-rater-set-up)
+      (org-fc-review-rate-mode -1))))
 
 (defvar org-fc-review-edit-mode-map
   (let ((map (make-sparse-keymap)))

@@ -36,7 +36,7 @@
     (define-key map "\C-b" 'org-fc-rater-previous-button)
     map))
 
-(defun org-fc-rater-setup-button ()
+(defun org-fc-rater-set-up ()
   (setq org-fc-rater-buffer (get-buffer-create "*Rater*"))
   (save-window-excursion
     (message nil)
