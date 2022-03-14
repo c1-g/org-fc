@@ -28,6 +28,9 @@
 (defvar org-fc-rater-buffer nil
   "The current Rater buffer, or nil.")
 
+(defvar org-fc-rater-origin-buffer nil
+  "The original buffer before calling rater.")
+
 (defvar org-fc-rater-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent
@@ -38,6 +41,7 @@
 
 (defun org-fc-rater-set-up ()
   (setq org-fc-rater-buffer (get-buffer-create "*Rater*"))
+  (setq org-fc-rater-origin-buffer (current-buffer))
   (save-window-excursion
     (message nil)
     (let ((echo-keystrokes 0)
