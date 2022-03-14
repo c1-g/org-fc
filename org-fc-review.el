@@ -231,26 +231,6 @@ same ID as the current card in the session."
      (org-fc-review-quit)
      (signal (car err) (cdr err)))))
 
-(defun org-fc-review-rate-again ()
-  "Rate the card at point with 'again'."
-  (interactive)
-  (org-fc-review-rate 'again))
-
-(defun org-fc-review-rate-hard ()
-  "Rate the card at point with 'hard'."
-  (interactive)
-  (org-fc-review-rate 'hard))
-
-(defun org-fc-review-rate-good ()
-  "Rate the card at point with 'good'."
-  (interactive)
-  (org-fc-review-rate 'good))
-
-(defun org-fc-review-rate-easy ()
-  "Rate the card at point with 'easy'."
-  (interactive)
-  (org-fc-review-rate 'easy))
-
 (defun org-fc-review-skip-card ()
   "Skip card and proceed to next."
   (interactive)
@@ -526,10 +506,6 @@ removed."
 
 (defvar org-fc-review-rate-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "a") 'org-fc-review-rate-again)
-    (define-key map (kbd "h") 'org-fc-review-rate-hard)
-    (define-key map (kbd "g") 'org-fc-review-rate-good)
-    (define-key map (kbd "e") 'org-fc-review-rate-easy)
     (define-key map (kbd "s") 'org-fc-review-suspend-card)
     (define-key map (kbd "p") 'org-fc-review-edit)
     (define-key map (kbd "q") 'org-fc-review-quit)
