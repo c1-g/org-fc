@@ -145,7 +145,9 @@ If RESUMING is non-nil, some parts of the buffer setup are skipped."
                   (if buffer
                       (setq-local org-fc-reviewing-existing-buffer t)
                     (setq-local org-fc-reviewing-existing-buffer nil))
-                  (org-fc-set-header-line))
+                  (org-fc-set-header-line)
+                  (require 'org-fc-rater)
+                  (org-fc-rater-setup-button))
 
                 (goto-char (point-min))
                 (org-fc-id-goto id path)
