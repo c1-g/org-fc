@@ -532,7 +532,9 @@ removed."
     (org-fc-review-flip-mode -1)
     ;; Make sure we're in org mode and there is an active review session
     (if (and (derived-mode-p 'org-mode) org-fc-review--session)
-        (org-fc-rater-set-up)
+        (if (= 1 (length (org-fc-algo-rating (org-fc-algorithm))))
+            (org-fc-review-rate (plist-get (car (org-fc-algo-rating (org-fc-algorithm))) :rate))
+            (org-fc-rater-set-up))
       (org-fc-review-rate-mode -1))))
 
 (defvar org-fc-review-edit-mode-map

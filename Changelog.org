@@ -4,6 +4,15 @@ upcoming changes.
 
 In case a update to the org sources is needed, I'll add a changelog
 entry with updating instructions.
+** 2.1.0
+*** Added
+- Automatic rating when there is only one possible rating for an algorithm.
+*** Fixed
+- ~org-fc-register-algo~ not registering algorithm with the new rating definiton.
+** 2.0.0
+*** Added
+- Rating buttons every time user enter ~org-fc-review-rate-mode~
+- New way to define an algorithm rating via property list
 ** 1.3.1
 *** Fixed
 - ~org-fc-review-suspend-card~ not saving the file after adding ~org-fc-suspended-tag~ to it.

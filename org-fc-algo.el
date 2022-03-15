@@ -114,8 +114,10 @@ parameter to a string."
                           ;; This simulates a real scenario, user select one of the RATING,
                           ;; NEXT-FN is passed with that rating and the current parameters to
                           ;; return new parameters.
-                          (apply next-fn (append (list (nth (random (length rating)) rating))
-                                                 init-values))
+                          (apply next-fn (append
+                                          (list (plist-get
+                                                 (nth (random (length rating)) rating) :rate))
+                                          init-values))
                         next-fn)))
     
     (cond ((not (= (length params) (length init-values)))
