@@ -165,10 +165,9 @@ If RESUMING is non-nil, some parts of the buffer setup are skipped."
                   ;; If the card has a no-noop flip function,
                   ;; skip to rate-mode
                   (let ((flip-fn (org-fc-type-flip-fn type)))
-                    (if (or
-                         (eq step 'rate)
-                         (null flip-fn)
-                         (eq flip-fn #'org-fc-noop))
+                    (if (or (eq step 'rate)
+                            (null flip-fn)
+                            (eq flip-fn #'org-fc-noop))
                         (org-fc-review-rate-mode 1)
                       (org-fc-review-flip-mode 1)))))))
         (error
@@ -230,26 +229,6 @@ same ID as the current card in the session."
     (error
      (org-fc-review-quit)
      (signal (car err) (cdr err)))))
-
-(defun org-fc-review-rate-again ()
-  "Rate the card at point with 'again'."
-  (interactive)
-  (org-fc-review-rate 'again))
-
-(defun org-fc-review-rate-hard ()
-  "Rate the card at point with 'hard'."
-  (interactive)
-  (org-fc-review-rate 'hard))
-
-(defun org-fc-review-rate-good ()
-  "Rate the card at point with 'good'."
-  (interactive)
-  (org-fc-review-rate 'good))
-
-(defun org-fc-review-rate-easy ()
-  "Rate the card at point with 'easy'."
-  (interactive)
-  (org-fc-review-rate 'easy))
 
 (defun org-fc-review-skip-card ()
   "Skip card and proceed to next."
@@ -522,17 +501,15 @@ removed."
     ;; Make sure only one of the modes is active at a time
     (org-fc-review-rate-mode -1)
     ;; Make sure we're in org mode and there is an active review session
-    (unless (and (derived-mode-p 'org-mode) org-fc-review--session)
+    (if (and (derived-mode-p 'org-mode) org-fc-review--session)
+        (progn (require 'org-fc-rater)
+               (org-fc-rater-kill-rater))
       (org-fc-review-flip-mode -1))))
 
 ;;;;; Rate Mode
 
 (defvar org-fc-review-rate-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "a") 'org-fc-review-rate-again)
-    (define-key map (kbd "h") 'org-fc-review-rate-hard)
-    (define-key map (kbd "g") 'org-fc-review-rate-good)
-    (define-key map (kbd "e") 'org-fc-review-rate-easy)
     (define-key map (kbd "s") 'org-fc-review-suspend-card)
     (define-key map (kbd "p") 'org-fc-review-edit)
     (define-key map (kbd "q") 'org-fc-review-quit)
@@ -551,7 +528,8 @@ removed."
     ;; Make sure only one of the modes is active at a time
     (org-fc-review-flip-mode -1)
     ;; Make sure we're in org mode and there is an active review session
-    (unless (and (derived-mode-p 'org-mode) org-fc-review--session)
+    (if (and (derived-mode-p 'org-mode) org-fc-review--session)
+        (org-fc-rater-set-up)
       (org-fc-review-rate-mode -1))))
 
 (defvar org-fc-review-edit-mode-map

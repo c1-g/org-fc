@@ -139,7 +139,10 @@ EASE, BOX and INTERVAL are the current parameters of the card."
 (org-fc-register-algo
  'sm2-v1
  '("position" "ease" "box" "interval" "due")
- '(again hard good easy)
+ '((:rate again :tag "Again" :key "a" :face (:background "red"))
+   (:rate hard :tag "Hard" :key "h" :face (:background "orange"))
+   (:rate good :tag "Good" :key "g" :face (:background "green"))
+   (:rate easy :tag "Easy" :key "e" :face (:background "lime green")))
  'org-fc-algo-sm2-initial-review-data
  'org-fc-algo-sm2-next-parameters
  'org-fc-algo-sm2-omit-due-date-in-history-file)
@@ -147,7 +150,10 @@ EASE, BOX and INTERVAL are the current parameters of the card."
 (org-fc-register-algo
  'sm2-v2
  '("position" "ease" "box" "interval" "due")
- '(again hard good easy)
+ '((:rate again :tag "Again" :key "a" :face (:background "red"))
+   (:rate hard :tag "Hard" :key "h" :face (:background "orange"))
+   (:rate good :tag "Good" :key "g" :face (:background "green"))
+   (:rate easy :tag "Easy" :key "e" :face (:background "lime green")))
  'org-fc-algo-sm2-initial-review-data
  'org-fc-algo-sm2-next-parameters
  'org-fc-algo-sm2-omit-due-date-in-history-file)
