@@ -30,13 +30,22 @@
   "Return a float based on the content of this buffer.
 EASE will help with the computation."
   (setq ease (or ease (org-fc-algo-sm2-ease-initial)))
-  (with-current-buffer (clone-buffer)
-    (goto-char (point-min))
-    (flush-lines org-keyword-regexp)
-    (flush-lines org-property-drawer-re)
-    (flush-lines org-drawer-regexp)
-    (/ (* 40 ease)
-       (org-fc-roam-sm2-lix-region (point-min) (point-max)))))
+  (if buffer-file-name
+      (with-temp-buffer
+        (insert-file-contents buffer-file-name)
+        (goto-char (point-min))
+        (flush-lines org-keyword-regexp)
+        (flush-lines org-property-drawer-re)
+        (flush-lines org-drawer-regexp)
+        (/ (* 40 ease)
+           (org-fc-roam-sm2-lix-region (point-min) (point-max))))
+    (with-current-buffer (clone-buffer)
+      (goto-char (point-min))
+      (flush-lines org-keyword-regexp)
+      (flush-lines org-property-drawer-re)
+      (flush-lines org-drawer-regexp)
+      (/ (* 40 ease)
+         (org-fc-roam-sm2-lix-region (point-min) (point-max))))))
 
 (defun org-fc-roam-sm2-inital-review-data ()
   (let ((priority (org-fc-roam-sm2-priority-get)))
