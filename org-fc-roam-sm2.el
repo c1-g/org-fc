@@ -120,7 +120,10 @@ C = Number of long words (More than 6 letters)"
 (org-fc-register-algo
  'roam-sm2
  '("position" "prior" "ease" "box" "interval" "postp" "due")
- '(again hard good easy)
+ '((:rate again :tag "Again" :key "a" :face (:background "red" :foreground "black"))
+   (:rate hard :tag "Hard" :key "h" :face (:background "orange" :foreground "black"))
+   (:rate good :tag "Good" :key "g" :face (:background "green" :foreground "black"))
+   (:rate easy :tag "Easy" :key "e" :face (:background "lime green" :foreground "black")))
  'org-fc-roam-sm2-inital-review-data
  'org-fc-roam-sm2-next-parameters
  'org-fc-roam-sm2-format-data)
