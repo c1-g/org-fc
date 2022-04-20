@@ -4,6 +4,9 @@ upcoming changes.
 
 In case a update to the org sources is needed, I'll add a changelog
 entry with updating instructions.
+** 2.2.0
+***  Added
+- The =:non-recursive= in custom contexts means that awk will search for cards non-recursively.
 ** 2.1.0
 *** Added
 - Automatic rating when there is only one possible rating for an algorithm.
