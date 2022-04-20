@@ -194,9 +194,7 @@ same ID as the current card in the session."
         (let ((type (plist-get card :type)))
           (funcall (org-fc-type-flip-fn type))
           (run-hooks 'org-fc-after-flip-hook)
-          (if (eq type 'topic)
-              (org-fc-review-rate-easy)
-            (org-fc-review-rate-mode))))
+          (org-fc-review-rate-mode)))
     (error
      (org-fc-review-quit)
      (signal (car err) (cdr err)))))
