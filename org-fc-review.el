@@ -98,11 +98,9 @@ Valid contexts:
       (setq cards (funcall org-fc-index-sort-function cards))
       (if (null cards)
           (message "No cards due right now")
-        (progn
-          (setq org-fc-review--session
-                (org-fc-make-review-session cards))
-          (run-hooks 'org-fc-before-review-hook)
-          (org-fc-review-next-card))))))
+        (setq org-fc-review--session (org-fc-make-review-session cards))
+        (run-hooks 'org-fc-before-review-hook)
+        (org-fc-review-next-card)))))
 
 (defun org-fc-review-resume ()
   "Resume review session, if it was paused."
