@@ -306,28 +306,28 @@ GET-DB is a function that returns connection to database."
                                     (string-to-number (plist-get params :box))
                                     (string-to-number (plist-get params :interval)))))
                         history)))
-            (org-roam-db-query
-             [:insert :into cards
-                      :values $v1]
-             (seq-map (lambda (datum)
-                        (cl-destructuring-bind (pos prior ease box intrv postp due) datum
-                          (vector id
-                                  title
-                                  pos
-                                  (string-to-number prior)
-                                  (string-to-number ease)
-                                  (string-to-number box)
-                                  (string-to-number intrv)
-                                  (string-to-number postp)
-                                  (string-to-number (format-time-string "%s" (date-to-time due)))
-                                  (length history)
-                                  (cl-count "again" history :test (lambda (rating elt)
-                                                                    (string= rating (plist-get elt :rating))))
-                                  (intern type)
-                                  (cond ((member org-fc-suspended-tag tags) -1)
-                                        ((member org-fc-pending-tag tags) 0)
-                                        (t 1)))))
-                      review-data))))))))
+            (when review-data
+              (org-roam-db-query
+               [:insert :into cards
+                        :values $v1]
+               (seq-map (lambda (datum)
+                          (cl-destructuring-bind (pos prior ease box intrv postp due) datum
+                            (vector id
+                                    title
+                                    pos
+                                    (string-to-number prior)
+                                    (string-to-number ease)
+                                    (string-to-number box)
+                                    (string-to-number intrv)
+                                    (string-to-number postp)
+                                    (string-to-number (format-time-string "%s" (date-to-time due)))
+                                    (length history)
+                                    (cl-count "again" history :test (lambda (rating elt)
+                                                                      (string= rating (plist-get elt :rating))))
+                                    (intern type)
+                                    (cond ((member org-fc-suspended-tag tags) -1)
+                                          (t 1)))))
+                        review-data)))))))))
 
 (defun org-fc-roam-db-insert-outline-review-history ()
   "Insert outline level review history into `org-roam' database."
@@ -378,28 +378,28 @@ GET-DB is a function that returns connection to database."
                                 (plist-get params :box)
                                 (plist-get params :interval))))
                     history)))
-        (org-roam-db-query
-         [:insert :into cards
-                  :values $v1]
-         (seq-map (lambda (datum)
-                    (cl-destructuring-bind (pos prior ease box intrv postp due) datum
-                      (vector id
-                              title
-                              pos
-                              (string-to-number prior)
-                              (string-to-number ease)
-                              (string-to-number box)
-                              (string-to-number intrv)
-                              (string-to-number postp)
-                              (string-to-number (format-time-string "%s" (date-to-time due)))
-                              (length history)
-                              (cl-count "again" history :test (lambda (rating elt)
-                                                                (string= rating (plist-get elt :rating))))
-                              (intern type)
-                              (cond ((member org-fc-suspended-tag tags) -1)
-                                    ((member org-fc-pending-tag tags) 0)
-                                    (t 1)))))
-                  review-data))))))
+        (when review-data
+          (org-roam-db-query
+           [:insert :into cards
+                    :values $v1]
+           (seq-map (lambda (datum)
+                      (cl-destructuring-bind (pos prior ease box intrv postp due) datum
+                        (vector id
+                                title
+                                pos
+                                (string-to-number prior)
+                                (string-to-number ease)
+                                (string-to-number box)
+                                (string-to-number intrv)
+                                (string-to-number postp)
+                                (string-to-number (format-time-string "%s" (date-to-time due)))
+                                (length history)
+                                (cl-count "again" history :test (lambda (rating elt)
+                                                                  (string= rating (plist-get elt :rating))))
+                                (intern type)
+                                (cond ((member org-fc-suspended-tag tags) -1)
+                                      (t 1)))))
+                    review-data)))))))
 
 (defun org-fc-roam-review-history-add (history)
   (let ((current-card (oref org-fc-review--session current-item)))
