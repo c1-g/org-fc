@@ -783,8 +783,8 @@ use `(and (type double) (tag \"math\"))'."
 (defun org-fc-index (context)
   "Create an index for review CONTEXT."
   (let ((paths (plist-get context :paths))
-        (filter (plist-get context :filter)))
-    ;; Handle path formats / symbols
+        (filter (plist-get context :filter)) ;; Handle path formats / symbols
+        (non-recursive (plist-get context :non-recursive)))
     (cond
      ((or (null paths) (eq paths 'all)) (setq paths org-fc-directories))
      ((eq paths 'buffer) (setq paths (list (buffer-file-name))))
@@ -792,7 +792,7 @@ use `(and (type double) (tag \"math\"))'."
 
     (if filter (setq filter (org-fc--compile-filter filter)))
 
-    (funcall org-fc-index-function paths filter)))
+    (funcall (or (plist-get context :indexer) org-fc-index-function) paths filter non-recursive)))
 
 (defun org-fc-index-flatten-card (card)
   "Flatten CARD into a list of positions.

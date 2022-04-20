@@ -31,16 +31,17 @@
 
 ;;;; Shell wrappers
 
-(defun org-fc-awk--find (paths)
+(defun org-fc-awk--find (paths &optional non-recursive)
   "Generate shell code to search PATHS for org files.
 Matches all .org files ignoring ones with names don't start with
 a '.' to exclude temporary / backup files.
 With the '-L' option, 'find' follows symlinks."
   (format
-   "find -L %s -name \"*.org\" -not -name \".*\" -print0"
+   "find -L %s %s -name \"*.org\" -not -name \".*\" -print0"
    (mapconcat
     (lambda (path) (shell-quote-argument (expand-file-name path)))
-    paths " ")))
+    paths " ")
+   (if non-recursive "-mindepth 1 -maxdepth 1" "")))
 
 (defun org-fc-awk--indexer-variables ()
   "Variables to pass to indexer scripts."
@@ -98,20 +99,20 @@ ITAGS and LTAGS are strings `\":tag1:tag2:\"'"
       (plist-get file :cards)))
    index))
 
-(defun org-fc-awk-index (paths &optional filter)
+(defun org-fc-awk-index (paths &optional filter non-recursive)
   "Find cards in PATHS matching an optional FILTER predicate.
 FILTER can be either nil or a function taking a single card as
   its input."
-  (let ((index (org-fc-awk-index-paths paths)))
+  (let ((index (org-fc-awk-index-paths paths non-recursive)))
     (if filter
         (cl-remove-if-not filter index)
       index)))
 
-(defun org-fc-awk-index-paths (paths)
+(defun org-fc-awk-index-paths (paths &optional non-recursive)
   "Generate a list of all cards and positions in PATHS."
   (let ((output (shell-command-to-string
                  (org-fc-awk--pipe
-                  (org-fc-awk--find paths)
+                  (org-fc-awk--find paths non-recursive)
                   (org-fc-awk--xargs
                    (org-fc-awk--command
                     "awk/index.awk"
