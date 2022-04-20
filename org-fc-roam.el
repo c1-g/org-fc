@@ -405,16 +405,13 @@ GET-DB is a function that returns connection to database."
 (advice-add 'org-fc-review-history-add :before 'org-fc-roam-review-history-add)
 
 
-(defun org-fc-roam-update (&optional buffer)
-  (with-current-buffer (or buffer (current-buffer))
-    (when (org-roam-file-p)
-      (when-let* ((id (org-id-get))
-                  (data (org-roam-db-query "SELECT pos, prior, ease, box, ivl,
+(defun org-fc-roam-update (&rest _args)
+  (when-let* ((id (org-id-get))
+              (data (org-roam-db-query "SELECT pos, prior, ease, box, ivl,
 postp, '\"' || strftime('%%Y-%%m-%%dT%%H:%%M:%%SZ', due, 'unixepoch') || '\"'
 FROM cards WHERE node_id = $s1" id)))
-        (org-fc-review-data-set data)
-        (save-buffer)))
-    (current-buffer)))
+    (org-fc-review-data-set data)
+    (save-buffer)))
 
 (defun org-fc-roam-auto-sort ()
   "Sort cards by their priority.
