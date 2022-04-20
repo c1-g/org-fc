@@ -402,7 +402,7 @@ GET-DB is a function that returns connection to database."
                (string-to-number box)
                (string-to-number ivl))))))
 
-(advice-add 'org-fc-roam-review-history-add :before 'org-fc-review-history-add)
+(advice-add 'org-fc-review-history-add :before 'org-fc-roam-review-history-add)
 
 
 (defun org-fc-roam-update (&optional buffer)
