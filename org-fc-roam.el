@@ -280,15 +280,7 @@ GET-DB is a function that returns connection to database."
                (type (org-entry-get nil org-fc-type-property))
                (tags org-file-tags))
           
-          (unless (f-parent-of? org-roam-dailies-directory buffer-file-name)
-            
-            (unless (member org-fc-flashcard-tag tags)
-              (org-fc-type-topic-init)
-              (save-buffer))
-            (org-roam-db-query
-             [:delete :from cards
-                      :where (= node-id $s1)]
-             id)
+          (when (member org-fc-flashcard-tag tags)
             (when history
               (org-roam-db-query
                [:insert :into revlog
@@ -352,15 +344,7 @@ GET-DB is a function that returns connection to database."
            (type (org-entry-get nil org-fc-type-property))
            (tags (org-get-tags)))
 
-      (unless (f-parent-of? org-roam-dailies-directory buffer-file-name)
-
-        (unless (member org-fc-flashcard-tag tags)
-          (org-fc-type-topic-init)
-          (save-buffer))
-        (org-roam-db-query
-         [:delete :from cards
-                  :where (= node-id $s1)]
-         id)
+      (when (member org-fc-flashcard-tag tags)
         (when history
           (org-roam-db-query
            [:insert :into revlog
