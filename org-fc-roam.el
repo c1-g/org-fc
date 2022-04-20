@@ -504,7 +504,8 @@ LIMIT -1 OFFSET $s7))"
    filter
    (progn
      (setq paths (--group-by (or (f-same? it org-roam-directory)
-                                 (f-descendant-of? it org-roam-directory)) paths))
+                                 (f-descendant-of? it org-roam-directory))
+                             paths))
      (cond ((and (null (assq t paths)) (assq nil paths))
             (mapc (lambda (path)
                     (warn "%s is not managed by org-roam, will index it with org-fc-awk-index instead." path))
