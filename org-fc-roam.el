@@ -500,8 +500,8 @@ LIMIT -1 OFFSET $s7))"
 (add-hook 'kill-emacs-hook 'org-fc-roam-maybe-postpone-then-sort)
 
 (defun org-fc-roam-index (paths &optional filter)
-  (cl-remove-if-not
-   (or filter #'always)
+  (cl-remove-if
+   filter
    (progn
      (setq paths (--group-by (or (f-same? it org-roam-directory)
                                  (f-descendant-of? it org-roam-directory)) paths))
