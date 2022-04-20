@@ -30,22 +30,25 @@
   "Return a float based on the content of this buffer.
 EASE will help with the computation."
   (setq ease (or ease (org-fc-algo-sm2-ease-initial)))
-  (if buffer-file-name
-      (with-temp-buffer
-        (insert-file-contents buffer-file-name)
-        (goto-char (point-min))
-        (flush-lines org-keyword-regexp)
-        (flush-lines org-property-drawer-re)
-        (flush-lines org-drawer-regexp)
-        (/ (* 40 ease)
-           (org-fc-roam-sm2-lix-region (point-min) (point-max))))
-    (with-current-buffer (clone-buffer)
-      (goto-char (point-min))
-      (flush-lines org-keyword-regexp)
-      (flush-lines org-property-drawer-re)
-      (flush-lines org-drawer-regexp)
-      (/ (* 40 ease)
-         (org-fc-roam-sm2-lix-region (point-min) (point-max))))))
+  (let ((org-export-with-toc nil)
+        (org-export-with-author nil)
+        (org-export-with-emphasize nil)
+        (org-export-with-tables nil)
+        (org-export-show-temporary-export-buffer nil)
+        (priority) (buf) (winconf (current-window-configuration)))
+    (if (org-before-first-heading-p)
+	(setq buf (org-ascii-export-as-ascii))
+      (setq buf (org-ascii-export-as-ascii nil t t t)))
+
+    (setq priority (or (ignore-errors
+                         (with-current-buffer buf
+                           (/ (org-fc-roam-sm2-lix-region (point-min)
+                                                          (point-max))
+                              (* 40 ease))))
+                       80))
+    (kill-buffer buf)
+    (set-window-configuration winconf)
+    priority))
 
 (defun org-fc-roam-sm2-inital-review-data ()
   (let ((priority (org-fc-roam-sm2-priority-get)))
