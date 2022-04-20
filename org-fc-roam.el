@@ -456,12 +456,12 @@ When `org-fc-roam-auto-postpone' is non-nil, this function will be called by
 
   (org-roam-db-query "INSERT INTO postponed_cards
 SELECT * FROM cards
-WHERE date(due, 'unixepoch') >= date('now', 'utc')
+WHERE due >= strftime('%%s','now', 'utc')
 ORDER BY prior")
 
   (org-roam-db-query "INSERT INTO postponed_cards
 SELECT * FROM cards
-WHERE date(due, 'unixepoch') < date('now', 'utc') AND  queue = -1
+WHERE due < strftime('%%s','now', 'utc') AND  queue = -1
 ORDER BY prior")
 
   (org-roam-db-query "INSERT INTO postponed_cards
@@ -470,7 +470,7 @@ WHERE date(due, 'unixepoch') < date('now', 'utc') AND  queue = 0")
 
   (org-roam-db-query "INSERT INTO postponed_cards
 SELECT * FROM cards
-WHERE date(due, 'unixepoch') < date('now', 'utc') AND queue = 1
+WHERE due < strftime('%%s','now', 'utc') AND queue = 1
 ORDER BY prior
 LIMIT $s1" org-fc-roam-postpone-skip-following-number-of-cards)
 
@@ -497,7 +497,7 @@ END AS new_ivl, ivl, due, postp, reps, lapses, type, queue
 
 FROM
 (SELECT * FROM cards
-WHERE date(due, 'unixepoch') < date('now', 'utc') AND queue = 1
+WHERE due < strftime('%%s','now', 'utc') AND queue = 1
 ORDER BY prior
 LIMIT -1 OFFSET $s7))"
                      (cdr org-fc-roam-postpone-delay-factor)
@@ -629,7 +629,7 @@ LEFT JOIN nodes ON nodes.id = cards.node_id
 LEFT JOIN files ON files.file = nodes.file
 GROUP BY id, cards.pos, tags)
 GROUP BY id, pos)
-WHERE date(due, 'unixepoch') <= date('now', 'utc') AND queue = 1
+WHERE due <= strftime('%%s','now', 'utc') AND queue = 1
 GROUP BY id, pos)
 ORDER BY prior"))))))
 
