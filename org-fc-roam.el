@@ -201,8 +201,8 @@ GET-DB is a function that returns connection to database."
     (cond (enabled
            (setq org-fc-roam-db--initalized nil)
            (add-hook 'org-roam-find-file-hook #'org-fc-roam-update)
-           (advice-add 'org-roam-node-find-noselect
-                       :filter-return
+           (advice-add 'org-roam-node-open
+                       :after
                        #'org-fc-roam-update)
            ;; attach custom schemata
            (seq-each
