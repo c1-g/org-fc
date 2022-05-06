@@ -496,7 +496,7 @@ LIMIT -1 OFFSET $s7))"
 
 (add-hook 'kill-emacs-hook 'org-fc-roam-maybe-postpone-then-sort)
 
-(defun org-fc-roam-index (paths &optional filter)
+(defun org-fc-roam-index (paths &optional filter non-recursive)
   (cl-remove-if
    filter
    (progn
@@ -508,14 +508,14 @@ LIMIT -1 OFFSET $s7))"
                     (warn "%s is not managed by org-roam, will index it with org-fc-awk-index instead." path))
                   (cdr (assq nil paths)))
             (require 'org-fc-awk)
-            (org-fc-awk-index (cdr (assq nil paths)) filter))
+            (org-fc-awk-index (cdr (assq nil paths)) filter non-recursive))
 
            ((and (assq t paths) (assq nil paths))
             (mapc (lambda (path)
                     (warn "%s is not managed by org-roam, will index it with org-fc-awk-index instead." path))
                   (cdr (assq nil paths)))
             (require 'org-fc-awk)
-            (append (org-fc-awk-index (cdr (assq nil paths)))
+            (append (org-fc-awk-index (cdr (assq nil paths)) filter non-recursive)
                     (org-fc-roam-index (cdr (assq t paths)))))
 
            (t
