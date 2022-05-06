@@ -104,6 +104,13 @@ less than 3 days, and with `topic' type, no less than 5."
   :type '(cons (integer :tag "Minimum interval for other types of cards")
                (integer :tag "Minimum interval for topic cards")))
 
+(defcustom org-fc-roam-postpone-skip-count 250
+  "Postpone count helps you prevent numerous postpones. For example, if you set
+ the postpone count to 6 in the Items column, items will only be
+ postponed 6 times. After that, Postpone will not affect them"
+  :group 'org-fc
+  :type 'integer)
+
 (defcustom org-fc-shuffled-others-proportion 80
   "Proportion of randomized cards in comparision to prioritized cards.
 Cards are of other types than topic."
@@ -447,10 +454,12 @@ ORDER BY prior")
   
   (org-roam-db-query "INSERT INTO postponed_cards
 SELECT * FROM cards
-WHERE due < strftime('%%s','now', 'utc') AND queue = 1
+WHERE due < strftime('%%s','now', 'utc') AND queue = 1 AND postp > $s1
 ORDER BY prior
-LIMIT $s1" org-fc-roam-postpone-skip-following-number-of-cards)
-
+LIMIT $s2"
+                     org-fc-roam-postpone-skip-count
+                     org-fc-roam-postpone-skip-following-number-of-cards)
+  
   (org-roam-db-query "INSERT INTO postponed_cards
 SELECT node_id, title, pos, prior, ease, box, new_ivl,
 -- Due
@@ -474,9 +483,9 @@ END AS new_ivl, ivl, due, postp, reps, lapses, type, queue
 
 FROM
 (SELECT * FROM cards
-WHERE due < strftime('%%s','now', 'utc') AND queue = 1
+WHERE due < strftime('%%s','now', 'utc') AND queue = 1 AND postp < $s7
 ORDER BY prior
-LIMIT -1 OFFSET $s7))"
+LIMIT -1 OFFSET $s8))"
                      (cdr org-fc-roam-postpone-delay-factor)
                      (cdr org-fc-roam-postpone-minimum-interval)
                      (cdr org-fc-roam-postpone-maximum-interval)
@@ -484,7 +493,8 @@ LIMIT -1 OFFSET $s7))"
                      (car org-fc-roam-postpone-delay-factor)
                      (car org-fc-roam-postpone-minimum-interval)
                      (car org-fc-roam-postpone-maximum-interval)
-                     
+
+                     org-fc-roam-postpone-skip-count
                      org-fc-roam-postpone-skip-following-number-of-cards)
   
   (org-roam-db-query "DROP TABLE cards")
