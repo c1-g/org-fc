@@ -35,7 +35,7 @@ BEGIN {
 
     fc_tag = ":" or_default(fc_tag, "fc") ":";
     suspended_tag = ":" or_default(suspended_tag, "suspended") ":";
-    review_data_drawer = ":" or_default(review_data_drawer, "REVIEW_DATA") ":";
+    review_data_drawer = "[ \t]*:" or_default(review_data_drawer, "REVIEW_DATA") ":";
     type_property = or_default(type_property, "FC_TYPE");
     cloze_type_property = or_default(cloze_type_property, "FC_CLOZE_TYPE");
     created_property = or_default(created_property, "FC_CREATED");
@@ -123,7 +123,7 @@ match($0, /^(\*+)[ \t]+(.*)$/, a) {
 
 ## Drawer Parsing
 
-/:PROPERTIES:/ {
+/[ \t]*:PROPERTIES:/ {
     # if (state == state_file) {
         state = state_properties;
         delete properties;
@@ -145,7 +145,7 @@ $0 ~ review_data_drawer {
     next;
 }
 
-/:END:/ {
+/[ \t]*:END:/ {
     if (state == state_properties) {
         state = state_properties_done;
     } else if (state == state_review_data_body) {
