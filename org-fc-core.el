@@ -487,12 +487,13 @@ Should only be used by the init functions of card TYPEs."
   (org-id-get-create)
   (org-fc--add-tags (list org-fc-flashcard-tag)))
 
-(defun org-fc--deinit-card ()
+(defun org-fc-deinit-card ()
   "Deinitialize the current flashcard.
 
 This is the opposite of `org-fc--init-card' that is,
 remove `org-fc-created-property', remove `org-fc-type-property', remove `org-fc-review-data-drawer'
 and remove any tags related to org-fc."
+  (interactive)
   (if (not (org-fc-entry-p))
       (error "Headline is not a flashcard"))
   (org-back-to-heading-or-point-min)
