@@ -459,17 +459,16 @@ ORDER BY prior
 LIMIT $s2"
                      org-fc-roam-postpone-skip-count
                      org-fc-roam-postpone-skip-following-number-of-cards)
-  
   (org-roam-db-query "INSERT INTO postponed_cards
 SELECT node_id, title, pos, prior, ease, box, new_ivl,
+-- Postpone count
+postp + 1,
 -- Due
 CASE
 WHEN new_ivl > ivl
 THEN due + ((new_ivl - ivl) * 60 * 60 * 24)
 ELSE due + (new_ivl * 60 * 60 * 24)
 END,
--- Postpone count
-postp + 1,
 reps,
 lapses,
 type,
@@ -479,7 +478,7 @@ FROM (SELECT node_id, title, pos, prior, ease, box,
 CASE
 WHEN type = 'topic' THEN min($s3, max($s2, ivl * $s1)) 
 ELSE min($s6, max($s5, ivl * $s4))
-END AS new_ivl, ivl, due, postp, reps, lapses, type, queue
+END AS new_ivl, ivl, postp, due, reps, lapses, type, queue
 
 FROM
 (SELECT * FROM cards
