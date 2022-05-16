@@ -56,10 +56,9 @@ EASE will help with the computation."
           priority
           (org-fc-algo-sm2-ease-initial)
           0 0 0
-          (org-fc-timestamp-in
-           (if (string= "cloze" (org-entry-get nil org-fc-type-property))
-               (org-fc-roam-sm2-cloze-interval priority)
-             0)))))
+          (if (string= "cloze" (org-entry-get nil org-fc-type-property))
+              (org-fc-timestamp-in (org-fc-roam-sm2-cloze-interval priority))
+            (format-time-string "%FT%TZ" (org-get-scheduled-time nil) "UTC0")))))
 
 (defun org-fc-roam-sm2-lix-region (start end)
   "The Lasbarhetsindex Swedish Readability test score for region in START to END.
