@@ -68,6 +68,11 @@
 
 ;;; Variables
 
+(defcustom org-fc-review-show-remaining-cards t
+  "If non-nil, the number of the remaining cards will show on the header line."
+  :type 'boolean
+  :group 'org-fc)
+
 (defvar org-fc-review--session nil
   "Current review session.")
 
@@ -459,7 +464,7 @@ removed."
 
 (defun org-fc-set-header-line ()
   "Set the header-line for review."
-  (let* ((remaining (1+ (length (oref org-fc-review--session cards))))
+  (let* ((remaining (when org-fc-review-show-remaining-cards (1+ (length (oref org-fc-review--session cards)))))
          (current (oref org-fc-review--session current-item))
          (title
           (unless (member "notitle" (plist-get current :tags))
@@ -470,7 +475,7 @@ removed."
      `((org-fc-review-flip-mode "Flip")
        (org-fc-review-rate-mode "Rate")
        (org-fc-review-edit-mode "Edit")
-       ,(format " (%d) " remaining)
+       ,(if org-fc-review-show-remaining-cards (format " (%d) " remaining) " ")
        ,title))))
 
 (defun org-fc-reset-header-line ()
