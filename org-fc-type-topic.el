@@ -40,7 +40,7 @@
   (interactive)
   ;; Make sure the properties drawer is collapsed
   (if (org-before-first-heading-p)
-      (outline-hide-body)
+      (org-show-entry)
     (org-show-entry)
     (outline-hide-other)))
 
