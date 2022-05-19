@@ -459,6 +459,15 @@ ORDER BY prior
 LIMIT $s2"
                      org-fc-roam-postpone-skip-count
                      org-fc-roam-postpone-skip-following-number-of-cards)
+
+  (org-roam-db-query "INSERT INTO postponed_cards
+SELECT * FROM cards
+WHERE due < strftime('%%s','now', 'utc') AND queue = 1 AND postp < $s1
+ORDER BY prior
+LIMIT $s2"
+                     org-fc-roam-postpone-skip-count
+                     org-fc-roam-postpone-skip-following-number-of-cards)
+
   (org-roam-db-query "INSERT INTO postponed_cards
 SELECT node_id, title, pos, prior, ease, box, new_ivl,
 -- Postpone count
