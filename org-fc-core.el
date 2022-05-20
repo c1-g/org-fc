@@ -648,14 +648,18 @@ See `org-show-set-visibility' for possible values"
   "Narrow the outline tree.
 Only parent headings of the current heading remain visible."
   (interactive)
-  (let* ((tags (org-fc--get-tags)))
+  (let* ((tags (org-fc--get-tags))
+         (parent-fc-p))
     ;; Find the first heading with a :narrow: tag or the top level
     ;; ancestor of the current heading and narrow to its region
     (save-excursion
-      (while (org-up-heading-safe))
+      (while (org-up-heading-safe)
+        (setq parent-fc-p (and parent-fc-p (org-fc-entry-p))))
       (org-narrow-to-subtree)
       (outline-hide-subtree))
-    ;; Show only the ancestors of the current card
+    ;; Show only the ancestors of the current card if there is no flashcards in the ancestors
+    (when (and parent-fc-p (not (org-before-first-heading-p)))
+      (org-narrow-to-subtree))
     (org-show-set-visibility org-fc-narrow-visibility)
     (if (member "noheading" tags) (org-fc-hide-heading))))
 
