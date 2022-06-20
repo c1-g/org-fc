@@ -495,8 +495,8 @@ postp + 1,
 -- Due
 CASE
 WHEN new_ivl > ivl
-THEN due + ((new_ivl - ivl) * 60 * 60 * 24)
-ELSE due + (new_ivl * 60 * 60 * 24)
+THEN strftime('%%s','now', 'utc') + ((new_ivl - ivl) * 60 * 60 * 24)
+ELSE strftime('%%s','now', 'utc') + (new_ivl * 60 * 60 * 24)
 END,
 reps,
 lapses,
