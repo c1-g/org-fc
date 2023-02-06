@@ -112,6 +112,11 @@ Used to generate absolute paths to the awk scripts.")
   :type 'string
   :group 'org-fc)
 
+(defcustom org-fc-pending-tag "pending"
+  "Tag for marking pending cards."
+  :type 'string
+  :group 'org-fc)
+
 (defcustom org-fc-flashcard-tag "fc"
   "Tag for marking headlines as flashcards."
   :type 'string
@@ -482,12 +487,13 @@ Should only be used by the init functions of card TYPEs."
   (org-id-get-create)
   (org-fc--add-tags (list org-fc-flashcard-tag)))
 
-(defun org-fc--deinit-card ()
+(defun org-fc-deinit-card ()
   "Deinitialize the current flashcard.
 
 This is the opposite of `org-fc--init-card' that is,
 remove `org-fc-created-property', remove `org-fc-type-property', remove `org-fc-review-data-drawer'
 and remove any tags related to org-fc."
+  (interactive)
   (if (not (org-fc-entry-p))
       (error "Headline is not a flashcard"))
   (org-back-to-heading-or-point-min)
@@ -642,14 +648,18 @@ See `org-show-set-visibility' for possible values"
   "Narrow the outline tree.
 Only parent headings of the current heading remain visible."
   (interactive)
-  (let* ((tags (org-fc--get-tags)))
+  (let* ((tags (org-fc--get-tags))
+         (parent-fc-p))
     ;; Find the first heading with a :narrow: tag or the top level
     ;; ancestor of the current heading and narrow to its region
     (save-excursion
-      (while (org-up-heading-safe))
+      (while (org-up-heading-safe)
+        (setq parent-fc-p (or (org-fc-entry-p) parent-fc-p)))
       (org-narrow-to-subtree)
       (outline-hide-subtree))
-    ;; Show only the ancestors of the current card
+    ;; Show only the ancestors of the current card if there is no flashcards in the ancestors
+    (when (and parent-fc-p (not (org-before-first-heading-p)))
+      (org-narrow-to-subtree))
     (org-show-set-visibility org-fc-narrow-visibility)
     (if (member "noheading" tags) (org-fc-hide-heading))))
 

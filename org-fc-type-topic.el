@@ -39,7 +39,8 @@
   "Prepare a normal card for review."
   (interactive)
   ;; Make sure the properties drawer is collapsed
-  (outline-hide-body))
+  (org-show-entry))
+
 
 (org-fc-register-type
  'topic

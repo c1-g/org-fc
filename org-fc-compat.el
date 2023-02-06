@@ -97,12 +97,13 @@
 
 (unless (file-exists-p (concat org-fc-review-history-file ".bak"))
   (let ((backup-file-name (concat org-fc-review-history-file ".bak")))
-    (copy-file org-fc-review-history-file (concat org-fc-review-history-file ".bak") t nil t t)
-    (with-temp-buffer
-      (let ((code (call-process-shell-command (concat "gawk 'BEGIN {OFS=\"\t\"}{print $1, $2, $3, $10, $9, $8, $4, $5, $6, $7}'"
-                                                      (format " %s > %s" (concat org-fc-review-history-file ".bak") org-fc-review-history-file)) nil `(,(current-buffer) t))))
-        (unless (zerop code)
-          (error (buffer-string)))))))
+    (when (y-or-n-p "Org-fc requires a new format for review history file. Want to update with backup? ")
+      (copy-file org-fc-review-history-file (concat org-fc-review-history-file ".bak") nil nil nil t)
+      (with-temp-buffer
+        (let ((code (call-process-shell-command (concat "gawk 'BEGIN {OFS=\"\t\"}{print $1, $2, $3, $10, $9, $8, $4, $5, $6, $7}'"
+                                                        (format " %s > %s" (concat org-fc-review-history-file ".bak") org-fc-review-history-file)) nil `(,(current-buffer) t))))
+          (unless (zerop code)
+            (error (buffer-string))))))))
 
 ;;; Footer
 
