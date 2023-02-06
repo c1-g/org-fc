@@ -532,7 +532,7 @@ LIMIT -1 OFFSET $s8))"
   (when org-fc-roam-auto-postpone (org-fc-roam-auto-postpone))
   (when org-fc-roam-auto-sort (org-fc-roam-auto-sort)))
 
-(add-hook 'kill-emacs-hook 'org-fc-roam-maybe-postpone-then-sort 80)
+(add-hook 'after-init-hook 'org-fc-roam-maybe-postpone-then-sort)
 
 (defun org-fc-roam-index (paths &optional filter non-recursive)
   (cl-remove-if
