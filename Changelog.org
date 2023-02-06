@@ -1,33 +1,53 @@
 * Changelog
-I hope the current card / log format is flexible enough to accommodate
-upcoming changes.
+All notable changes to this project will be documented in this file.
 
-In case a update to the org sources is needed, I'll add a changelog
-entry with updating instructions.
-** 2.2.0
+The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a
+Changelog]], and this project adheres to
+[[https://semver.org/spec/v2.0.0.html][Semantic Versioning]].
+
+** Unreleased
+*** Added
+- ~org-fc-roam-mode~ for caching card data using org-roam's database.
+- More parameters considered in sorting cards; with [[https://supermemopedia.com/wiki/Priority][priority]] and [[https://super-memory.com/help/postpone.htm][postpone]].
+- The customization of the queue: the proportion of topic cards vs others,
+   the proportion of randomized cards vs priortized cards.
+*** Changed
+- Inplementation of [[https://super-memory.com/help/priority.htm][priority queue]] in the sorting of cards.
+
+** 2.3.0 <2023-02-06 Mon>
+*** Changed
+- Rewrite of Changelog.org
+** [[https://github.com/c1-g/org-fc/compare/2.1.0...2.2.0][2.2.0]] <2022-04-20 Wed>
 ***  Added
 - The =:non-recursive= in custom contexts means that awk will search for cards non-recursively.
-** 2.1.0
+*** Changed
+- Get readability score from plain text.
+*** Fixed
+- Comparing unix epoch time with UTC time.
+** [[https://github.com/c1-g/org-fc/compare/2.0.0...2.1.0][2.1.0]] <2022-03-15 Tue>
 *** Added
 - Automatic rating when there is only one possible rating for an algorithm.
 *** Fixed
 - ~org-fc-register-algo~ not registering algorithm with the new rating definiton.
-** 2.0.0
+** [[https://github.com/c1-g/org-fc/compare/1.3.1...2.0.0][2.0.0]] <2022-03-15 Tue>
 *** Added
 - Rating buttons every time user enter ~org-fc-review-rate-mode~
 - New way to define an algorithm rating via property list
-** 1.3.1
+** [[https://github.com/c1-g/org-fc/compare/1.3.0...1.3.1][1.3.1]] <2022-02-19 Sat>
 *** Fixed
 - ~org-fc-review-suspend-card~ not saving the file after adding ~org-fc-suspended-tag~ to it.
   See https://github.com/l3kn/org-fc/issues/54.
 - ~org-fc-browser--awk-index-paths~ outputs only one entry.
-** 1.3.0
+** [[https://github.com/c1-g/org-fc/compare/1.2.0...1.3.0][1.3.0]] <2022-02-19 Sat>
 *** Added
 - ~org-fc--deinit-card~ for deinitializing flashcards to turn them to normal headline
-** 1.2.0
+** [[https://github.com/c1-g/org-fc/compare/1.1.1...1.2.0][1.2.0]] <2022-02-07 Mon>
 *** Added
 - The =topic= card type for cards that are meant to be passively read without active recall
-- A way to customize the method for sorting card when making a new review session
+- ~org-fc-index-sort-cards~,  A new function to sort cards by interleaving topic cards
+  with other cards for more info see [[help:org-fc-index-sort-cards][its description]].
+*** Changed  
+- New method for sorting card when making a new review session
   The order goes:
   indexing (~org-fc-index~)
              |
@@ -37,35 +57,35 @@ entry with updating instructions.
              v
   sorting (~org-fc-index-sort-cards~)
  
-  The indexing can be customized by setting ~org-fc-index-function~, the filtering, via ~org-fc-index-filter-function~, and the sorting via ~org-fc-index-sort-function~
-  
-- ~org-fc-index-sort-cards~,  A new function to sort cards by interleaving topic cards
-  with other cards for more info see [[help:org-fc-index-sort-cards][its description]].
-  
-** 1.1.1
+  The indexing can be customized by setting ~org-fc-index-function~,
+  ~org-fc-index-filter-function~, ~org-fc-index-sort-function~ respectively.
+    
+** [[https://github.com/c1-g/org-fc/compare/1.0.1...1.1.1][1.1.1]] <2022-02-06 Sun>
 *** Added
-- The ~org-fc-cloze-dwim~ command that turns active region or word under point to a cloze
-*** Renamed / Deprecated
+- ~org-fc-cloze-dwim~ that turns active region or word under point to a cloze
+*** Deprecated
 - ~org-fc--add-tag~ -> ~org-fc--add-tags~
 - ~org-fc--remove-tag~ -> ~org-fc--remove-tags~  
-** 1.0.1
+** [[https://github.com/c1-g/org-fc/compare/1.0.0...1.0.1][1.0.1]] <2022-01-26 Wed>
 *** Fixed
 - ~org-fc-awk-history-for-id~ now outputs parameters as plist
-** 1.0.0
+** [[https://github.com/c1-g/org-fc/compare/0.3.0...1.0.0][1.0.0]] <2022-01-25 Tue>
 *** Added
 - An algorithm api via ~org-fc-register-algo~, see its documentation for more.
-** 0.3.0
+***  Deprecated
+- ~org-fc-priority~ -> ~org-fc-roam-sm2-priority-get~
+** [[https://github.com/c1-g/org-fc/compare/0.2.0...0.3.0][0.3.0]] <2022-01-22 Sat>
 *** Added
 - A card browser built on ~tabulated-list-mode~, can be accessed by =M-x org-fc-browser=.
-** 0.2.0
+** [[https://github.com/c1-g/org-fc/compare/0.1.1...0.2.0][0.2.0]] <2022-01-20 Thu>
 *** Added
 - Support for a file-level flashcard, this kind of flashcard must be at
-  the top of the file, see [[elisp:(progn (org-id-goto "57518b76-7990-11ec-a58d-00d861145941") (org-fc-narrow))][this card]] for example.
-** 0.1.1
+  the top of the file, see [[file:demo.org::#headerless_card_demo][this card]] for example.
+** [[https://github.com/c1-g/org-fc/compare/0.1.0...0.1.1][0.1.1]] <2022-01-18 Tue>
 *** Added
 - A "burden" value in ~org-fc-dashboard~, see [[https://supermemo.guru/wiki/Burden]] for what it means.
 - A "lapses" value in ~org-fc-dashboard~, the average number of times each card has been forgotten.
-** 0.1.0
+** [[https://github.com/c1-g/org-fc/compare/0.0.1...0.1.0][0.1.0]] <2021-03-07 Sun>
 *** Added
 - A ~org-fc-after-flip-hook~ that is run after a card is flipped
 - Support for setting audio files to play after flipping a card via
@@ -81,7 +101,7 @@ entry with updating instructions.
 *** Removed
 - The "G" key binding in ~org-fc-dashboard-mode~ has been removed in
   favor of the default "g" ~revert-buffer~ binding
-** 0.0.1
+** 0.0.1 <2020-11-12 Thu>
 *** [2020-11-12 Thu]
 - Removed ~(org-fc-filter-index index filter)~,
   replacing it with indexer specific functions
