@@ -654,7 +654,7 @@ Only parent headings of the current heading remain visible."
     ;; ancestor of the current heading and narrow to its region
     (save-excursion
       (while (org-up-heading-safe)
-        (setq parent-fc-p (and parent-fc-p (org-fc-entry-p))))
+        (setq parent-fc-p (or (org-fc-entry-p) parent-fc-p)))
       (org-narrow-to-subtree)
       (outline-hide-subtree))
     ;; Show only the ancestors of the current card if there is no flashcards in the ancestors
