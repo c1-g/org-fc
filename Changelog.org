@@ -5,25 +5,119 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a
 Changelog]], and this project adheres to
 [[https://semver.org/spec/v2.0.0.html][Semantic Versioning]].
 
-** Unreleased
+** [[https://github.com/c1-g/org-fc/compare/2.11.0...2.12.0][2.12.0]] <2023-02-06 Mon>
 *** Added
-- ~org-fc-roam-mode~ for caching card data using org-roam's database.
-- More parameters considered in sorting cards; with [[https://supermemopedia.com/wiki/Priority][priority]] and [[https://super-memory.com/help/postpone.htm][postpone]].
-- The customization of the queue: the proportion of topic cards vs others,
-   the proportion of randomized cards vs priortized cards.
+- ~org-fc-review-show-remaining-cards~ a variable that controls whether
+  to show the number of remaining cards in review session.
 *** Changed
-- Inplementation of [[https://super-memory.com/help/priority.htm][priority queue]] in the sorting of cards.
+- Auto postpone happens at startup of Emacs.
+- Topic cards won't be narrowed when set up.
+*** Renamed / Deprecated
+- ~org-fc--deinit-card~ -> ~org-fc-deinit-card~
+*** Fixed
+- The due date of postponed cards being in the past result in multiple
+  postponement.
+- Deleting unpostponed due cards from database.
+- AWK indexer not recognizing padded property drawer
+- Postpone count got swapped with due date in the reinsertion of card table.
+** [[https://github.com/c1-g/org-fc/compare/2.10.0...2.11.0][2.11.0]] <2022-05-06 Fri>
+*** Added
+- ~org-fc-roam-postpone-skip-count~ a variable that limits the amount of
+  cards to be postponed per day.
+- ~org-fc-roam-index~ now passes an additonal opition =NON-RECURSIVE= to ~org-fc-awk-index~.
+*** Changed
+- Priority now comes from the exported plain text version of the content from a card to avoid mistaking Org mode markup for content.
+*** Removed
+- Pending cards indexer ~org-fc-roam-index-pending~ due to low usage.
+*** Fixed
+- Advising an obsolete function ~org-roam-node-find-noselect~.
+- Inaccurate time comparison in auto postpone function.
+** [[https://github.com/c1-g/org-fc/compare/2.9.0...2.10.0][2.10.0]] <2022-03-14 Mon>
+*** Added
+- Buttons for rating cards in session.
+*** Changed
+- The available ratings for cards now has to be defined for each
+  algorithm via [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Property-Lists.html][property list]].
+*** Removed
+These rating commands are removed and replaced with buttons to show to
+user instead.
+- ~org-fc-review-rate-again~
+- ~org-fc-review-rate-hard~
+- ~org-fc-review-rate-good~
+- ~org-fc-review-rate-easy~
+** [[https://github.com/c1-g/org-fc/compare/2.8.0...2.9.0][2.9.0]] <2022-03-12 Sat>
+*** Added
+- [[https://supermemo.guru/wiki/Cloze_interval][Cloze interval]] for cloze deletion cards.
+- ~org-fc-roam-mode~ for caching card data using org-roam's database.
+*** Changed
+- Priority is now determined by [[https://en.wikipedia.org/wiki/Lix_(readability_test)][LIX readability score]] instead of the
+  length of the text.
+- Org-roam daily notes will not be inserted to cards table.
+- The property drawer of topic cards will not be narrowed when in
+  review session.
+*** Renamed / Deprecated
+- ~org-fc-priority~ -> ~org-fc-roam-sm2-priority-get~
+*** Fixed
+- Not quoting card id to use in AWK script for ~org-fc-awk-history-for-id~.
+- Auto-postponing non-due cards as a result of comparing localtime
+  with UTC time.
+** [[https://github.com/c1-g/org-fc/compare/2.7.0...2.8.0][2.8.0]] <2022-02-08 Tue>
+*** Added
+- roam-sm2 accepts the scheduled time of a card as initial due date if
+  it is in the future.
+- ~org-fc-roam-index~ fallbacks to ~org-fc-awk-index~ when a card is not
+  managed by org-roam.
+- A sorting function ~org-fc-roam-index-sort-cards~ that interleave
+  topic cards with other cards.
+- The customization of the queue: the proportion of topic cards vs
+  others, the proportion of randomized cards vs priortized cards.
+** [[https://github.com/c1-g/org-fc/compare/2.6.0...2.7.0][2.7.0]] <2022-02-04 Fri>
+*** Added
+- Auto sorting and postponing low priority cards everytime Emacs is closed.
+  See: [[https://supermemo.guru/wiki/Auto-postpone][Auto-postpone]].
+- ~org-fc-roam-review-history-add~ adds old review data to ~revlog~ when a
+  card is reviewed.
+*** Changed
+- ~org-fc-roam-index~ now only lists [[https://help.supermemo.org/wiki/Glossary:Outstanding_element][outstanding]] cards.
+- ~org-fc-awk-history-for-id~ outputs time as number instead of string.
+*** Fixed
+- ~org-fc-roam-index~ output no position.
+- Unable to insert review data because position is not formatted as string.
 
-** 2.3.0 <2023-02-06 Mon>
+** [[https://github.com/c1-g/org-fc/compare/2.5.0...2.6.0][2.6.0]] <2022-01-26 Wed>
+*** Added
+- [[https://super-memory.com/help/postpone.htm][postpone]] value in ~cards~ schema.
+- [[https://supermemopedia.com/index.php?title=Pending_queue][Pending queue]] for card with "pending" tag, using its separate
+  indexer ~org-fc-roam-index-pending~.
+- ~org-fc-roam-update~ that automatically reinsert review data of every
+  org-roam node to match with the database.
+*** Changed
+- ~org-fc-awk-history-for-id~ outputs a list of plists.
+** [[https://github.com/c1-g/org-fc/compare/2.4.0...2.5.0][2.5.0]] <2022-01-26 Wed>
+
+*** Added
+- A variant of SM2 algorithm with extra parameters: priority.
+- ~org-fc-priority~ that calculates the priority based on the length of
+  the content of a card.
+*** Fixed
+- Database insertion function inserted card type as due date resulting
+  in every card being due now.
+
+** [[https://github.com/c1-g/org-fc/compare/2.3.0...2.4.0][2.4.0]] <2022-01-26 Wed>
+*** Added
+- Integrate with org-roam database with the new schema of ~cards~ and
+  ~revlog~.
+- New indexer ~org-fc-roam-index~ that queries org-roam database and
+  transforms the output to plist of cards useful to org-fc.
+- ~org-fc-awk-history-for-id~ a command that outputs the history for a
+  card using the script ~index_history.awk~.
+
+** [[https://github.com/c1-g/org-fc/compare/2.2.0...2.3.0][2.3.0]] <2023-02-06 Mon>
 *** Changed
 - Rewrite of Changelog.org
 ** [[https://github.com/c1-g/org-fc/compare/2.1.0...2.2.0][2.2.0]] <2022-04-20 Wed>
 ***  Added
 - The =:non-recursive= in custom contexts means that awk will search for cards non-recursively.
-*** Changed
-- Get readability score from plain text.
-*** Fixed
-- Comparing unix epoch time with UTC time.
 ** [[https://github.com/c1-g/org-fc/compare/2.0.0...2.1.0][2.1.0]] <2022-03-15 Tue>
 *** Added
 - Automatic rating when there is only one possible rating for an algorithm.
@@ -63,7 +157,7 @@ Changelog]], and this project adheres to
 ** [[https://github.com/c1-g/org-fc/compare/1.0.1...1.1.1][1.1.1]] <2022-02-06 Sun>
 *** Added
 - ~org-fc-cloze-dwim~ that turns active region or word under point to a cloze
-*** Deprecated
+*** Renamed / Deprecated
 - ~org-fc--add-tag~ -> ~org-fc--add-tags~
 - ~org-fc--remove-tag~ -> ~org-fc--remove-tags~  
 ** [[https://github.com/c1-g/org-fc/compare/1.0.0...1.0.1][1.0.1]] <2022-01-26 Wed>
@@ -72,8 +166,6 @@ Changelog]], and this project adheres to
 ** [[https://github.com/c1-g/org-fc/compare/0.3.0...1.0.0][1.0.0]] <2022-01-25 Tue>
 *** Added
 - An algorithm api via ~org-fc-register-algo~, see its documentation for more.
-***  Deprecated
-- ~org-fc-priority~ -> ~org-fc-roam-sm2-priority-get~
 ** [[https://github.com/c1-g/org-fc/compare/0.2.0...0.3.0][0.3.0]] <2022-01-22 Sat>
 *** Added
 - A card browser built on ~tabulated-list-mode~, can be accessed by =M-x org-fc-browser=.
