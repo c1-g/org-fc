@@ -52,6 +52,8 @@
   :type 'string
   :group 'org-fc)
 
+(defvar org-fc-audio-last-file nil)
+
 (defun org-fc-audio-set-before-setup (file)
   "Set the befor-setup audio property of the current card to FILE."
   (interactive "f")
@@ -74,11 +76,19 @@
   "Play the audio of the current card.
 Look up the file from PROPERTY. If SPEED is non-nil, play back
 the file at the given speed."
+  (interactive
+   (list
+    (completing-read
+     "Type: "
+     `(,org-fc-audio-before-setup-property
+       ,org-fc-audio-after-setup-property
+       ,org-fc-audio-after-flip-property))))
   (if-let ((file (org-entry-get (point) property)))
       (org-fc-audio-play-file file (or speed 1.0))))
 
 (defun org-fc-audio-play-file (file speed)
   "Play the audio FILE at SPEED."
+  (setq org-fc-audio-last-file file)
   (start-process-shell-command
    "org-fc audio"
    nil
@@ -95,6 +105,17 @@ the file at the given speed."
 (add-hook
  'org-fc-after-flip-hook
  (lambda () (org-fc-audio-play org-fc-audio-after-flip-property)))
+
+(defun org-fc-audio-replay ()
+  (interactive)
+  (when org-fc-audio-last-file
+    (org-fc-audio-play-file org-fc-audio-last-file 1.0)))
+
+(defun org-fc-audio-replay-slow ()
+  (interactive)
+  (when org-fc-audio-last-file
+    (org-fc-audio-play-file org-fc-audio-last-file 0.7)))
+
 
 ;;; Footer
 
