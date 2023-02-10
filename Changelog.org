@@ -5,6 +5,15 @@ The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a
 Changelog]], and this project adheres to
 [[https://semver.org/spec/v2.0.0.html][Semantic Versioning]].
 
+** [[https://github.com/c1-g/org-fc/compare/2.12.0...2.13.0][2.13.0]] <2023-02-10 Fri>
+*** Added
+- Card creation date in org-roam database.
+*** Fixed
+- Make time specification of org-fc-roam works with dashboard.
+- The content of topic cards is hidden.
+*** Changed
+- ~index.awk~ doesn't output =:file-suspended= anymore.
+- ~org-fc-awk-index-paths~ check for suspended file level card.
 ** [[https://github.com/c1-g/org-fc/compare/2.11.0...2.12.0][2.12.0]] <2023-02-06 Mon>
 *** Added
 - ~org-fc-review-show-remaining-cards~ a variable that controls whether
