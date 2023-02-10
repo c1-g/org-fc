@@ -184,7 +184,7 @@ If RESUMING is non-nil, some parts of the buffer setup are skipped."
   "Evaluate BODY with the current card bound to VAR.
 Before evaluating BODY, check if the heading at point has the
 same ID as the current card in the session."
-  (declare (indent defun))
+  (declare (indent 0) (debug t))
   `(if org-fc-review--session
        (if-let ((,var (oref org-fc-review--session current-item)))
            (if (string= (plist-get ,var :id) (org-id-get))
