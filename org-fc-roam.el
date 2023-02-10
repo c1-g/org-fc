@@ -138,7 +138,8 @@ Cards are of other types than topic."
        (reps :integer :not-null)
        (lapses :integer :not-null)
        (type :not-null)
-       (queue :integer :not-null)]
+       (queue :integer :not-null)
+       (created :not-null)]
       (:foreign-key
        [node-id]
        :references nodes
@@ -284,6 +285,7 @@ GET-DB is a function that returns connection to database."
                             file org-roam-directory))))
                (review-data (org-fc-review-data-get))
                (history (org-fc-awk-history-for-id id))
+               (created (org-entry-get nil org-fc-created-property))
                (type (org-entry-get nil org-fc-type-property))
                (tags org-file-tags))
           
@@ -319,13 +321,14 @@ GET-DB is a function that returns connection to database."
                                       (string-to-number box)
                                       (string-to-number intrv)
                                       (string-to-number postp)
-                                      (string-to-number (format-time-string "%s" (date-to-time due)))
+                                      (round (time-to-seconds (date-to-time due)))
                                       (length history)
                                       (cl-count "again" history :test (lambda (rating elt)
                                                                         (string= rating (plist-get elt :rating))))
                                       (intern type)
                                       (cond ((member org-fc-suspended-tag tags) -1)
-                                            (t 1)))))
+                                            (t 1))
+                                      (round (time-to-seconds (date-to-time created))))))
                           review-data)
                (vconcat
                 (append (list id title)
@@ -336,7 +339,8 @@ GET-DB is a function that returns connection to database."
                                                                 (string= rating (plist-get elt :rating))))
                               (intern (or type "normal"))
                               (cond ((member org-fc-suspended-tag tags) -1)
-                                    (t 1)))))))))))))
+                                    (t 1))
+                              (round (time-to-seconds (date-to-time created))))))))))))))
 
 (defun org-fc-roam-db-insert-outline-review-history ()
   "Insert outline level review history into `org-roam' database."
@@ -358,6 +362,7 @@ GET-DB is a function that returns connection to database."
            (title (org-link-display-format title))
            (review-data (org-fc-review-data-get))
            (history (org-fc-awk-history-for-id id))
+           (created (org-entry-get nil org-fc-created-property))
            (type (org-entry-get nil org-fc-type-property))
            (tags (org-get-tags)))
 
@@ -399,7 +404,8 @@ GET-DB is a function that returns connection to database."
                                                                     (string= rating (plist-get elt :rating))))
                                   (intern type)
                                   (cond ((member org-fc-suspended-tag tags) -1)
-                                        (t 1)))))
+                                        (t 1))
+                                  (round (time-to-seconds (date-to-time created))))))
                       review-data)
            (vconcat
             (append (list id title)
@@ -410,7 +416,8 @@ GET-DB is a function that returns connection to database."
                                                             (string= rating (plist-get elt :rating))))
                           (intern (or type "normal"))
                           (cond ((member org-fc-suspended-tag tags) -1)
-                                (t 1)))))))))))
+                                (t 1))
+                          (round (time-to-seconds (date-to-time created))))))))))))
 
 (defun org-fc-roam-review-history-add (history)
   (let ((current-card (oref org-fc-review--session current-item)))
@@ -501,13 +508,14 @@ END,
 reps,
 lapses,
 type,
-queue
+queue,
+created
 
 FROM (SELECT node_id, title, pos, prior, ease, box,
 CASE
 WHEN type = 'topic' THEN min($s3, max($s2, ivl * $s1)) 
 ELSE min($s6, max($s5, ivl * $s4))
-END AS new_ivl, ivl, postp, due, reps, lapses, type, queue
+END AS new_ivl, ivl, postp, due, reps, lapses, type, queue, created
 
 FROM
 (SELECT * FROM cards
@@ -564,19 +572,21 @@ LIMIT -1 OFFSET $s8))"
 ':title', title,
 ':type', type,
 ':suspended', 'nil',
+':created', '(' || cast(created >> 16 as text), cast(created & 0xffff as text) || ')',
 ':positions' || '((',
 ':position', pos,
 ':prior', prior,
 ':ease', ease,
 ':box', box,
 ':interval', ivl,
-':due', '\"' || strftime('%%Y-%%m-%%dT%%H:%%M:%%SZ', due, 'unixepoch') || '\"',
+':due', '(' || cast(due >> 16 as text), cast(due & 0xffff as text) || ')',
+-- ---^ Converting unixepoch to Emacs timestamp in form of (second_upper_16_bit, second_lower_16_bit)
 ':rating', '\"' || 'Future' || '\"))',
 ':tags', '(' || group_concat(tags, ' ') || ')' as tags,
 ':path', path,
 ':filetitle', filetitle
 FROM
-(SELECT rowid, id, title, pos, prior, ease, box, ivl, postp, due, type, queue, tags, path, filetitle
+(SELECT rowid, id, title, pos, prior, ease, box, ivl, postp, due, type, queue, created, tags, path, filetitle
 FROM
 (SELECT
 cards.rowid as rowid,
@@ -591,6 +601,7 @@ cards.postp as postp,
 cards.due as due,
 cards.type as type,
 cards.queue as queue,
+cards.created as created,
 tags.tag as tags,
 nodes.file as path,
 files.title as filetitle
