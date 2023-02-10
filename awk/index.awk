@@ -59,6 +59,7 @@ BEGINFILE {
     delete parent_tags;
     file_title = "";
     title = "";
+    level = 0;
     parent_tags[0] = "";
     state = state_file;
 
@@ -71,8 +72,7 @@ ENDFILE {
     # On `BEGINFILE` we don't know the file's title yet so we output
     # it once done processing the rest of the file.
     print "  )  :title " (file_title ? escape_string(file_title) : "nil") \
-        " :filetags " escape_string(parent_tags[0]) \
-        " :file-suspended " (file_suspended ? "t" : "nil") ")"; 
+        " :filetags " escape_string(parent_tags[0]) ")";
 }
 
 ## File Title
@@ -89,7 +89,6 @@ match($0, /^#\+(FILETAGS|filetags):[ \t]+(.*)/, a) {
     # Combine tags to handle multiple FILETAGS lines
     parent_tags[0] = combine_tags(a[2], parent_tags[0]);
     suspended = (parent_tags[0] ~ suspended_tag);
-    file_suspended = suspended;
     next;
 }
 
@@ -171,8 +170,9 @@ $0 ~ review_data_drawer {
             ":id " escape_string(properties["ID"])  \
             " :title " title         \
             " :type " properties[type_property]     \
-            cloze_type                                            \
-            " :created " parse_time(properties[created_property]) \
+            cloze_type;
+        if (level == 0) { print " :filelevel t";}
+        print " :created " parse_time(properties[created_property]) \
             " :suspended " (suspended ? "t" : "nil")   \
             " :inherited-tags " escape_string(inherited_tags)   \
             " :local-tags " escape_string(parent_tags[level])   \
