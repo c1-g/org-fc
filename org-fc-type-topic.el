@@ -39,7 +39,7 @@
   "Prepare a normal card for review."
   (interactive)
   ;; Make sure the properties drawer is collapsed
-  (org-show-entry))
+  (org-fold-show-subtree))
 
 
 (org-fc-register-type
