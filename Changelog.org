@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [[https://keepachangelog.com/en/1.0.0/][Keep a
 Changelog]], and this project adheres to
 [[https://semver.org/spec/v2.0.0.html][Semantic Versioning]].
-
+** Unreleased
+*** Added
+- Customizing hinting string ("...") with ~org-fc-type-cloze-hint-prefix~.
+- Show the total number of position in ~org-fc-dashboard~.
+- Option to hide the title of a card; ~org-fc-review-hide-title-in-header-line~.
+- Documentation files from https://www.leonrische.me/fc/index.html in [[file:docs/][docs/]].
+- ~org-fc-audio-replay~ to replay audio of a card.
 ** [[https://github.com/c1-g/org-fc/compare/2.12.0...2.13.0][2.13.0]] <2023-02-10 Fri>
 *** Added
 - Card creation date in org-roam database.
